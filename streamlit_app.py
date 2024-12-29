@@ -56,36 +56,71 @@ def recommend_exercise(age, weight, sleep_disorder, occupation):
     return fitness_exercises + gym_exercises
 
 # Streamlit App
-st.set_page_config(page_title="Exercise Recommendation System", page_icon=":runner:", layout="centered")
+st.set_page_config(page_title="Exercise Recommendation System", page_icon=":runner:", layout="wide")
+st.markdown(
+    """
+    <style>
+    .main {background-color: #f0f8ff;}
+    .stApp {background: linear-gradient(to bottom, #ffffff, #e0f7fa);}
+    header {text-align: center; color: #00796b;}
+    .sidebar .sidebar-content {background-color: #00796b; color: white;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st.title(":runner: Exercise Recommendation System")
+st.markdown(
+    """
+    <div style="text-align: center;">
+        <h3>Get personalized exercise plans based on your health and lifestyle</h3>
+        <p style="color: #555;">Answer a few questions, and we'll recommend exercises tailored to your needs.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Add a sidebar for navigation and additional info
 with st.sidebar:
     st.header("About This App")
-    st.write(
-        "This app provides personalized exercise recommendations based on your age, weight, sleep habits, occupation, and sleep disorders. "
-        "Stay active and healthy!"
+    st.markdown(
+        """
+        <p style="color: white;">
+        This app provides personalized exercise recommendations based on your age, weight, sleep habits, occupation, and sleep disorders. Stay active and healthy!
+        </p>
+        """,
+        unsafe_allow_html=True
     )
     st.write("---")
     st.header("Tips for Using This App")
-    st.write("1. Enter accurate details for better recommendations.")
-    st.write("2. Use the recommendations as a guideline to build a healthier lifestyle.")
+    st.markdown(
+        """
+        <ul style="color: white;">
+        <li>Enter accurate details for better recommendations.</li>
+        <li>Use the recommendations as a guideline to build a healthier lifestyle.</li>
+        </ul>
+        """,
+        unsafe_allow_html=True
+    )
 
 st.markdown(
     """
     ### :clipboard: Fill in Your Details Below
-    Provide your details, and we'll recommend exercises tailored to your health and lifestyle needs.
     """
 )
 
 # User Inputs
 with st.form("user_details_form"):
-    st.markdown("#### :bust_in_silhouette: Personal Information")
-    age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
-    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
+    col1, col2 = st.columns(2)
 
-    st.markdown("#### :zzz: Sleep Information")
-    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
+    with col1:
+        st.markdown("#### :bust_in_silhouette: Personal Information")
+        age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
+        weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
+
+    with col2:
+        st.markdown("#### :zzz: Sleep Information")
+        sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
 
     st.markdown("#### :briefcase: Work Lifestyle")
     occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
@@ -99,9 +134,13 @@ if submit_button:
     st.markdown("### :sparkles: Your Recommended Exercises")
 
     if recommended_exercises:
-        st.markdown("Here are the exercises tailored for you:")
+        st.markdown(
+            "<ul>",
+            unsafe_allow_html=True
+        )
         for i, exercise in enumerate(recommended_exercises, start=1):
-            st.write(f"**{i}.** {exercise}")
+            st.markdown(f"<li>{exercise}</li>", unsafe_allow_html=True)
+        st.markdown("</ul>", unsafe_allow_html=True)
     else:
         st.warning("No exercises found for the given inputs. Please try again with different details.")
 
@@ -109,7 +148,9 @@ if submit_button:
 st.markdown(
     """
     ---
-    **Stay healthy and active!** Made with :heart: using Streamlit.
+    <div style="text-align: center; color: #00796b;">
+        <p><strong>Stay healthy and active!</strong> Made with <span style="color: red;">♥</span> using Streamlit.</p>
+    </div>
     """,
     unsafe_allow_html=True
 )
