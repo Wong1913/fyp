@@ -1,7 +1,6 @@
-# 📦 Streamlit App Starter Kit 
-```
-⬆️ (Replace above with your app's name)
-```
+# 📦 Machine Learning Model
+
+This is a predictive fitness plan model
 
 Description of the app ...
 
