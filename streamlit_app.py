@@ -39,39 +39,50 @@ def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
     # Map category to mega_gym_mapping keys
     category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Advanced"}
     gym_category = category_mapping.get(category, "Beginner")
-    
-    # Debugging outputs
-    print(f"Predicted Category: {category}")
-    print(f"Gym Category: {gym_category}")
-    print(f"Mega Gym Mapping for {gym_category}: {mega_gym_mapping.get(gym_category, [])}")
-    
+
     # Fetch exercises
     fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
     gym_exercises = random.sample(mega_gym_mapping.get(gym_category, []), min(7, len(mega_gym_mapping.get(gym_category, []))))
-    
-    # Debugging selected exercises
-    print(f"Fitness Exercises: {fitness_exercises}")
-    print(f"Gym Exercises: {gym_exercises}")
-    
+
     return fitness_exercises + gym_exercises
 
-
 # Streamlit App
-st.title("Exercise Recommendation System")
-st.header("Provide your details to get personalized exercise recommendations")
+st.set_page_config(page_title="Exercise Recommendation System", layout="centered")
+st.title(":runner: Exercise Recommendation System")
+st.markdown(
+    """
+    ### Provide your details to get personalized exercise recommendations
+    Fill in the form below, and our system will recommend exercises tailored to your lifestyle and health needs.
+    """
+)
 
 # User Inputs
-age = st.number_input("Age", min_value=1, max_value=120, value=30)
-weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
-sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
-occupation = st.selectbox("Occupation", ["Sedentary", "Active"])
-sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
+with st.form("user_details_form"):
+    age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
+    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
+    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
+    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
+    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
+    submit_button = st.form_submit_button("Get Recommendations")
 
 # Generate Recommendation
-if st.button("Recommend Exercises"):
+if submit_button:
     recommended_exercises = recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder)
-    st.success("Recommended Exercises:")
-    st.write(", ".join(recommended_exercises))    
+    st.markdown("### :sparkles: Your Recommended Exercises:")
+    
+    if recommended_exercises:
+        for i, exercise in enumerate(recommended_exercises, start=1):
+            st.markdown(f"**{i}.** {exercise}")
+    else:
+        st.warning("No exercises found for the given inputs. Please try again with different details.")
+
+# Footer
+st.markdown(
+    """
+    ---
+    Made with :heart: using Streamlit. Stay healthy and active! :muscle:
+    """
+)  
 
 
 
