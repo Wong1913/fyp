@@ -9,7 +9,10 @@ mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs
 fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
 
 # Preprocess datasets
+# Group exercises in megaGymDataset by 'Level'
 mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
+
+# Categorize fitness_data exercises by 'Calories per kg'
 fitness_data['Intensity'] = pd.cut(
     fitness_data['Calories per kg'],
     bins=[0, 1.0, 2.0, fitness_data['Calories per kg'].max()],
@@ -17,6 +20,7 @@ fitness_data['Intensity'] = pd.cut(
 )
 fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport (1 hour)'].apply(list).to_dict()
 
+# Combine mappings
 exercise_mapping = {
     "Low": fitness_mapping.get('Low', []) + mega_gym_mapping.get('Beginner', []),
     "Medium": fitness_mapping.get('Medium', []) + mega_gym_mapping.get('Intermediate', []),
@@ -33,9 +37,9 @@ def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
     else:
         category = "High"
     
-    # Fetch exercises
-    fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
+    # Fetch 7 exercises from megaGymDataset and 2 from fitness_data
     gym_exercises = random.sample(mega_gym_mapping.get(category, []), min(7, len(mega_gym_mapping.get(category, []))))
+    fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
     return fitness_exercises + gym_exercises
 
 # Streamlit App
@@ -54,5 +58,6 @@ if st.button("Recommend Exercises"):
     recommended_exercises = recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder)
     st.success("Recommended Exercises:")
     st.write(", ".join(recommended_exercises))
+
 
 
