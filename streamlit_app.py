@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 
-# Load datasets
+# Load necessary datasets
 @st.cache
 def load_data():
     mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/megaGymDataset.csv')
@@ -12,7 +12,10 @@ def load_data():
 mega_gym_data, fitness_data = load_data()
 
 # Preprocess datasets
+# Group exercises in megaGymDataset by 'Level'
 mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
+
+# Categorize fitness_data exercises by 'Calories per kg'
 fitness_data['Intensity'] = pd.cut(
     fitness_data['Calories per kg'],
     bins=[0, 1.0, 2.0, fitness_data['Calories per kg'].max()],
@@ -20,7 +23,7 @@ fitness_data['Intensity'] = pd.cut(
 )
 fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport (1 hour)'].apply(list).to_dict()
 
-# Map categories to their corresponding levels
+# Combine mappings
 category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Advanced"}
 
 # Recommendation Function
@@ -30,7 +33,7 @@ def recommend_exercise(category):
     gym_exercises = random.sample(mega_gym_mapping.get(gym_category, []), min(7, len(mega_gym_mapping.get(gym_category, []))))
     return fitness_exercises, gym_exercises
 
-# Streamlit UI
+# Streamlit App
 st.set_page_config(page_title="Exercise Recommendation System", page_icon="🏋️", layout="centered")
 
 st.title("🏋️ Exercise Recommendation System")
@@ -39,7 +42,7 @@ st.write("**Get personalized exercise recommendations tailored to your fitness l
 # Sidebar for User Inputs
 st.sidebar.header("Provide Your Details")
 age = st.sidebar.slider("Age", min_value=1, max_value=120, value=30)
-weight = st.sidebar.slider("Weight (kg)", min_value=1, max_value=200, value=70)
+weight = st.sidebar.slider("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
 sleep_duration = st.sidebar.slider("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
 occupation = st.sidebar.selectbox("Occupation", ["Sedentary", "Active"])
 sleep_disorder = st.sidebar.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
@@ -58,9 +61,11 @@ if st.button("🔍 Get Recommendations"):
     
     st.success("🎯 Your Recommended Exercises:")
     st.write("### 🏃‍♂️ Fitness Activities:")
-    st.write(", ".join(fitness_exercises))
+    for exercise in fitness_exercises:
+        st.write(f"- {exercise}")
     st.write("### 🏋️ Gym Activities:")
-    st.write(", ".join(gym_exercises))
+    for exercise in gym_exercises:
+        st.write(f"- {exercise}")
     
     st.balloons()
 
@@ -72,6 +77,7 @@ st.markdown(
     Developed by Your Name
     """
 )
+
 
 
 
