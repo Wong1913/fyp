@@ -47,42 +47,64 @@ def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
     return fitness_exercises + gym_exercises
 
 # Streamlit App
-st.set_page_config(page_title="Exercise Recommendation System", layout="centered")
+st.set_page_config(page_title="Exercise Recommendation System", page_icon=":runner:", layout="centered")
 st.title(":runner: Exercise Recommendation System")
+
+# Add a sidebar for navigation and additional info
+with st.sidebar:
+    st.header("About This App")
+    st.write(
+        "This app provides personalized exercise recommendations based on your age, weight, sleep habits, occupation, and sleep disorders. "
+        "Stay active and healthy!"
+    )
+    st.write("---")
+    st.header("Tips for Using This App")
+    st.write("1. Enter accurate details for better recommendations.")
+    st.write("2. Use the recommendations as a guideline to build a healthier lifestyle.")
+
 st.markdown(
     """
-    ### Provide your details to get personalized exercise recommendations
-    Fill in the form below, and our system will recommend exercises tailored to your lifestyle and health needs.
+    ### :clipboard: Fill in Your Details Below
+    Provide your details, and we'll recommend exercises tailored to your health and lifestyle needs.
     """
 )
 
 # User Inputs
 with st.form("user_details_form"):
+    st.markdown("#### :bust_in_silhouette: Personal Information")
     age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
     weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
+
+    st.markdown("#### :zzz: Sleep Information")
     sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
-    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
     sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
+
+    st.markdown("#### :briefcase: Work Lifestyle")
+    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
+
+    st.markdown("---")
     submit_button = st.form_submit_button("Get Recommendations")
 
 # Generate Recommendation
 if submit_button:
     recommended_exercises = recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder)
-    st.markdown("### :sparkles: Your Recommended Exercises:")
-    
+    st.markdown("### :sparkles: Your Recommended Exercises")
+
     if recommended_exercises:
+        st.markdown("Here are the exercises tailored for you:")
         for i, exercise in enumerate(recommended_exercises, start=1):
-            st.markdown(f"**{i}.** {exercise}")
+            st.write(f"**{i}.** {exercise}")
     else:
         st.warning("No exercises found for the given inputs. Please try again with different details.")
 
-# Footer
+# Footer with improved styling
 st.markdown(
     """
     ---
-    Made with :heart: using Streamlit. Stay healthy and active! :muscle:
-    """
-)  
+    **Stay healthy and active!** Made with :heart: using Streamlit.
+    """,
+    unsafe_allow_html=True
+)
 
 
 
