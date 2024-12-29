@@ -27,7 +27,6 @@ exercise_mapping = {
     "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Advanced', [])
 }
 
-# Recommendation Function
 def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
     # Map occupation and sleep disorder to categories
     if sleep_disorder == 'Yes' and occupation == 'Sedentary':
@@ -37,10 +36,25 @@ def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
     else:
         category = "High"
     
-    # Fetch 7 exercises from megaGymDataset and 2 from fitness_data
-    gym_exercises = random.sample(mega_gym_mapping.get(category, []), min(7, len(mega_gym_mapping.get(category, []))))
+    # Map category to mega_gym_mapping keys
+    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Advanced"}
+    gym_category = category_mapping.get(category, "Beginner")
+    
+    # Debugging outputs
+    print(f"Predicted Category: {category}")
+    print(f"Gym Category: {gym_category}")
+    print(f"Mega Gym Mapping for {gym_category}: {mega_gym_mapping.get(gym_category, [])}")
+    
+    # Fetch exercises
     fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
+    gym_exercises = random.sample(mega_gym_mapping.get(gym_category, []), min(7, len(mega_gym_mapping.get(gym_category, []))))
+    
+    # Debugging selected exercises
+    print(f"Fitness Exercises: {fitness_exercises}")
+    print(f"Gym Exercises: {gym_exercises}")
+    
     return fitness_exercises + gym_exercises
+
 
 # Streamlit App
 st.title("Exercise Recommendation System")
@@ -60,8 +74,7 @@ if st.button("Recommend Exercises"):
     st.write(", ".join(recommended_exercises))
 
 
-print(mega_gym_data.head())
-print("Mega Gym Mapping:", mega_gym_mapping)
+
 
 
 
