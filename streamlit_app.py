@@ -60,4 +60,9 @@ if st.button("Recommend Exercises"):
     st.write(", ".join(recommended_exercises))
 
 
+print(mega_gym_data.head())
+print("Mega Gym Mapping:", mega_gym_mapping)
+
+
+
 
