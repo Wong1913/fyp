@@ -24,20 +24,29 @@ fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport
 exercise_mapping = {
     "Low": fitness_mapping.get('Low', []) + mega_gym_mapping.get('Beginner', []),
     "Medium": fitness_mapping.get('Medium', []) + mega_gym_mapping.get('Intermediate', []),
-    "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
+    "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Advanced', [])
 }
 
-def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
-    # Map occupation and sleep disorder to categories
+def recommend_exercise(age, weight, sleep_disorder, occupation):
+    # Adjust category based on age and weight in addition to other inputs
     if sleep_disorder == 'Yes' and occupation == 'Sedentary':
-        category = "Low"
+        if age > 50 or weight > 80:
+            category = "Low"
+        else:
+            category = "Medium"
     elif sleep_disorder == 'No' and occupation == 'Active':
-        category = "Medium"
+        if age < 30 and weight < 70:
+            category = "High"
+        else:
+            category = "Medium"
     else:
-        category = "High"
-    
+        if age > 60 or weight > 90:
+            category = "Low"
+        else:
+            category = "High"
+
     # Map category to mega_gym_mapping keys
-    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Expert"}
+    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Advanced"}
     gym_category = category_mapping.get(category, "Beginner")
 
     # Fetch exercises
@@ -76,7 +85,6 @@ with st.form("user_details_form"):
     weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
 
     st.markdown("#### :zzz: Sleep Information")
-    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
     sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
 
     st.markdown("#### :briefcase: Work Lifestyle")
@@ -87,7 +95,7 @@ with st.form("user_details_form"):
 
 # Generate Recommendation
 if submit_button:
-    recommended_exercises = recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder)
+    recommended_exercises = recommend_exercise(age, weight, sleep_disorder, occupation)
     st.markdown("### :sparkles: Your Recommended Exercises")
 
     if recommended_exercises:
@@ -105,6 +113,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
