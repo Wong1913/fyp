@@ -10,7 +10,7 @@ def load_data():
     fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
     return sleep_health_data, mega_gym_data, fitness_data
 
-mega_gym_data, fitness_data = load_data()
+sleep_health_data, mega_gym_data, fitness_data = load_data()
 
 # Preprocess datasets
 # Group exercises in megaGymDataset by 'Level'
