@@ -1,17 +1,14 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import random
 
-# Load datasets
-@st.cache
-def load_data():
-    fitness_data = pd.read_csv('fitness_dataset.csv')
-    mega_gym_data = pd.read_csv('megaGymDataset.csv')
-    return fitness_data, mega_gym_data
+# Load necessary datasets
+sleep_health_data = pd.read_csv('/content/Sleep_health_and_lifestyle_dataset.csv')
+mega_gym_data = pd.read_csv('/content/megaGymDataset.csv')
+fitness_data = pd.read_csv('/content/fitness_dataset.csv')
 
-fitness_data, mega_gym_data = load_data()
-
-# Data processing
+# Preprocess datasets
 mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
 fitness_data['Intensity'] = pd.cut(
     fitness_data['Calories per kg'],
@@ -26,21 +23,36 @@ exercise_mapping = {
     "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Advanced', [])
 }
 
-# Recommendation function
-def recommend_exercise(category):
+# Recommendation Function
+def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
+    # Map occupation and sleep disorder to categories
+    if sleep_disorder == 'Yes' and occupation == 'Sedentary':
+        category = "Low"
+    elif sleep_disorder == 'No' and occupation == 'Active':
+        category = "Medium"
+    else:
+        category = "High"
+    
+    # Fetch exercises
     fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
     gym_exercises = random.sample(mega_gym_mapping.get(category, []), min(7, len(mega_gym_mapping.get(category, []))))
     return fitness_exercises + gym_exercises
 
-# Streamlit UI
+# Streamlit App
 st.title("Exercise Recommendation System")
-st.header("Get personalized exercise recommendations!")
+st.header("Provide your details to get personalized exercise recommendations")
 
-category = st.selectbox("Choose your fitness category:", ["Low", "Medium", "High"])
+# User Inputs
+age = st.number_input("Age", min_value=1, max_value=120, value=30)
+weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
+sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+occupation = st.selectbox("Occupation", ["Sedentary", "Active"])
+sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
 
-if st.button("Get Recommendations"):
-    exercises = recommend_exercise(category)
-    st.write("Recommended Exercises:")
-    st.write(", ".join(exercises))
+# Generate Recommendation
+if st.button("Recommend Exercises"):
+    recommended_exercises = recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder)
+    st.success("Recommended Exercises:")
+    st.write(", ".join(recommended_exercises))
 
 
