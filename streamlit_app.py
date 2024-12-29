@@ -24,7 +24,7 @@ fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport
 exercise_mapping = {
     "Low": fitness_mapping.get('Low', []) + mega_gym_mapping.get('Beginner', []),
     "Medium": fitness_mapping.get('Medium', []) + mega_gym_mapping.get('Intermediate', []),
-    "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Intermediate', [])
+    "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
 }
 
 def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
@@ -37,7 +37,7 @@ def recommend_exercise(age, weight, sleep_duration, occupation, sleep_disorder):
         category = "High"
     
     # Map category to mega_gym_mapping keys
-    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Advanced"}
+    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Expert"}
     gym_category = category_mapping.get(category, "Beginner")
 
     # Fetch exercises
