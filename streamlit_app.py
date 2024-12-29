@@ -5,8 +5,8 @@ import random
 
 # Load necessary datasets
 sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
-mega_gym_data = pd.read_csv('/content/megaGymDataset.csv')
-fitness_data = pd.read_csv('/content/fitness_dataset.csv')
+mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/megaGymDataset.csv')
+fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
 
 # Preprocess datasets
 mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
