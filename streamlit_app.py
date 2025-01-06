@@ -99,28 +99,29 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Get personalized exercise plans based on your health and lifestyle.</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Empower your wellness journey with personalized exercise plans tailored to your health and lifestyle.</p></div>', unsafe_allow_html=True)
 
 # Sidebar for Info and Insights
 with st.sidebar:
     st.header("About This App")
     st.markdown(
         """
-        This app provides personalized exercise recommendations based on your age, weight, occupation, sleep habits, sleep duration, blood pressure, and sleep disorders. Stay active and healthy!
+        <p style="font-size:14px;">This app provides scientifically curated exercise recommendations based on critical factors like age, weight, occupation, sleep patterns, blood pressure, and overall lifestyle. Elevate your fitness goals with insights tailored just for you!</p>
         """,
         unsafe_allow_html=True
     )
     st.write("---")
-    st.header("Tips for Using This App")
+    st.header("Quick Tips")
     st.markdown(
         """
-        - Enter accurate details for better recommendations.<br>
-        - Use the recommendations as a guideline to build a healthier lifestyle.
+        - Provide accurate details for optimal suggestions.<br>
+        - Follow recommendations regularly for better results.<br>
+        - Check back periodically for updated plans.
         """,
         unsafe_allow_html=True
     )
     st.write("---")
-    st.header("Session Analytics")
+    st.header("Session Insights")
     session_duration = datetime.now() - session_start
     st.metric(label="Total Recommendations", value=recommendation_count)
     st.metric(label="Session Duration", value=f"{session_duration.seconds} seconds")
@@ -137,18 +138,18 @@ with st.form("user_details_form"):
         weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
 
     with col2:
-        st.markdown("### Sleep Information")
-        sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
-        sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
+        st.markdown("### Sleep Details")
+        sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Diagnosed sleep issues? Select Yes or No.")
+        sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="Average hours of sleep per day.")
 
-    st.markdown("### Occupation")
-    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
+    st.markdown("### Lifestyle")
+    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Choose your daily activity level.")
 
-    st.markdown("### Blood Pressure")
+    st.markdown("### Health Metrics")
     blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure (mmHg).")
 
     st.markdown("---")
-    submit_button = st.form_submit_button("Get Recommendations")
+    submit_button = st.form_submit_button("Generate Recommendations")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -156,23 +157,23 @@ st.markdown('</div>', unsafe_allow_html=True)
 if submit_button:
     recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, blood_pressure)
     st.markdown('<div class="recommendation-container">', unsafe_allow_html=True)
-    st.markdown("### Your Recommended Exercises")
+    st.markdown("### Personalized Recommendations")
 
     if recommended_exercises:
-        st.markdown("Here are the exercises tailored for you:")
-        st.markdown("<ul>", unsafe_allow_html=True)
+        st.markdown("Your suggested activities include:")
+        st.markdown("<ul style='font-size:16px;'>", unsafe_allow_html=True)
         for i, exercise in enumerate(recommended_exercises, start=1):
             st.markdown(f"<li>{exercise}</li>", unsafe_allow_html=True)
         st.markdown("</ul>", unsafe_allow_html=True)
     else:
-        st.warning("No exercises found for the given inputs. Please try again with different details.")
+        st.warning("Unable to generate suggestions with the provided details. Try refining your inputs.")
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Stay healthy and active!</strong> Made with <span>♥</span> using Streamlit.</p>
+        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness.</p>
     </div>
     """,
     unsafe_allow_html=True
