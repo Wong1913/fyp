@@ -61,11 +61,11 @@ st.markdown(
     <style>
     body {
         font-family: 'Roboto', sans-serif;
-        background-color: #2e2f33;
-        color: #e0e0e0;
+        background-color: #e3f2fd;
+        color: #01579b;
     }
     .main-header {
-        background: linear-gradient(to right, #1f4037, #99f2c8);
+        background: linear-gradient(to right, #0288d1, #b3e5fc);
         color: white;
         text-align: center;
         padding: 20px 0;
@@ -73,33 +73,33 @@ st.markdown(
         margin-bottom: 20px;
     }
     .form-container {
-        background: #383b40;
-        border: 1px solid #5e6368;
+        background: #ffffff;
+        border: 1px solid #bbdefb;
         border-radius: 10px;
         padding: 25px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .recommendation-container {
-        background: #1f4037;
-        border: 1px solid #99f2c8;
+        background: #e1f5fe;
+        border: 1px solid #81d4fa;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .footer {
         text-align: center;
-        color: #99f2c8;
+        color: #0288d1;
         margin-top: 30px;
         font-size: 14px;
     }
     .footer span {
-        color: #e57373;
+        color: #d32f2f;
     }
     .sidebar-section {
-        background-color: #383b40;
+        background-color: #ffffff;
         padding: 15px;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         margin-bottom: 15px;
     }
     </style>
