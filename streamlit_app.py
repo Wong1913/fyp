@@ -53,34 +53,54 @@ st.set_page_config(page_title="Exercise Recommendation System", page_icon=":runn
 st.markdown(
     """
     <style>
-    .main {background-color: #f0f8ff;}
-    .stApp {background: linear-gradient(to bottom, #ffffff, #e0f7fa);}
-    header {text-align: center; color: #00796b;}
-    .sidebar .sidebar-content {background-color: #00796b; color: white;}
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f7f9fc;
+    }
+    .main-header {
+        background: linear-gradient(to right, #00796b, #48c6ef);
+        color: white;
+        text-align: center;
+        padding: 20px 0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .form-container {
+        background: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .recommendation-container {
+        background: #e3f2fd;
+        border: 1px solid #90caf9;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .footer {
+        text-align: center;
+        color: #00796b;
+        margin-top: 30px;
+        font-size: 14px;
+    }
+    .footer span {
+        color: red;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.title(":runner: Exercise Recommendation System")
-st.markdown(
-    """
-    <div style="text-align: center;">
-        <h3>Get personalized exercise plans based on your health and lifestyle</h3>
-        <p style="color: #555;">Answer a few questions, and we'll recommend exercises tailored to your needs.</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Get personalized exercise plans based on your health and lifestyle.</p></div>', unsafe_allow_html=True)
 
 # Add a sidebar for navigation and additional info
 with st.sidebar:
     st.header("About This App")
     st.markdown(
         """
-        <p style="color: white;">
         This app provides personalized exercise recommendations based on your age, weight, occupation, sleep habits, sleep duration, blood pressure, and sleep disorders. Stay active and healthy!
-        </p>
         """,
         unsafe_allow_html=True
     )
@@ -88,65 +108,60 @@ with st.sidebar:
     st.header("Tips for Using This App")
     st.markdown(
         """
-        <ul style="color: white;">
-        <li>Enter accurate details for better recommendations.</li>
-        <li>Use the recommendations as a guideline to build a healthier lifestyle.</li>
-        </ul>
+        - Enter accurate details for better recommendations.<br>
+        - Use the recommendations as a guideline to build a healthier lifestyle.
         """,
         unsafe_allow_html=True
     )
 
-st.markdown(
-    """
-    ### :clipboard: Fill in Your Details Below
-    """
-)
+st.markdown('<div class="form-container">', unsafe_allow_html=True)
 
 # User Inputs
 with st.form("user_details_form"):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("#### :bust_in_silhouette: Personal Information")
+        st.markdown("### Personal Information")
         age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
         weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
 
     with col2:
-        st.markdown("#### :zzz: Sleep Information")
+        st.markdown("### Sleep Information")
         sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
         sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
 
-    st.markdown("#### :briefcase: Occupation")
+    st.markdown("### Occupation")
     occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
 
-    st.markdown("#### :heartbeat: Blood Pressure")
+    st.markdown("### Blood Pressure")
     blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure (mmHg).")
 
     st.markdown("---")
     submit_button = st.form_submit_button("Get Recommendations")
 
+st.markdown('</div>', unsafe_allow_html=True)
+
 # Generate Recommendation
 if submit_button:
     recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, blood_pressure)
-    st.markdown("### :sparkles: Your Recommended Exercises")
+    st.markdown('<div class="recommendation-container">', unsafe_allow_html=True)
+    st.markdown("### Your Recommended Exercises")
 
     if recommended_exercises:
-        st.markdown(
-            "<ul>",
-            unsafe_allow_html=True
-        )
+        st.markdown("Here are the exercises tailored for you:")
+        st.markdown("<ul>", unsafe_allow_html=True)
         for i, exercise in enumerate(recommended_exercises, start=1):
             st.markdown(f"<li>{exercise}</li>", unsafe_allow_html=True)
         st.markdown("</ul>", unsafe_allow_html=True)
     else:
         st.warning("No exercises found for the given inputs. Please try again with different details.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# Footer with improved styling
+# Footer
 st.markdown(
     """
-    ---
-    <div style="text-align: center; color: #00796b;">
-        <p><strong>Stay healthy and active!</strong> Made with <span style="color: red;">♥</span> using Streamlit.</p>
+    <div class="footer">
+        <p><strong>Stay healthy and active!</strong> Made with <span>♥</span> using Streamlit.</p>
     </div>
     """,
     unsafe_allow_html=True
