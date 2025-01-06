@@ -27,23 +27,16 @@ exercise_mapping = {
     "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
 }
 
-def recommend_exercise(age, weight, sleep_disorder, occupation):
-    # Adjust category based on age and weight in addition to other inputs
-    if sleep_disorder == 'Yes' and occupation == 'Sedentary':
-        if age > 50 or weight > 80:
-            category = "Low"
-        else:
-            category = "Medium"
-    elif sleep_disorder == 'No' and occupation == 'Active':
-        if age < 30 and weight < 70:
-            category = "High"
-        else:
-            category = "Medium"
+def recommend_exercise(age, weight, sleep_disorder, sleep_duration, blood_pressure):
+    # Adjust category based on age, weight, sleep disorder, sleep duration, and blood pressure
+    if blood_pressure > 140 or (sleep_disorder == 'Yes' and sleep_duration < 6):
+        category = "Low"
+    elif age > 50 or weight > 80:
+        category = "Medium"
+    elif age < 30 and weight < 70 and sleep_duration >= 7 and blood_pressure <= 120:
+        category = "High"
     else:
-        if age > 60 or weight > 90:
-            category = "Low"
-        else:
-            category = "High"
+        category = "Medium"
 
     # Map category to mega_gym_mapping keys
     category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Expert"}
@@ -86,7 +79,7 @@ with st.sidebar:
     st.markdown(
         """
         <p style="color: white;">
-        This app provides personalized exercise recommendations based on your age, weight, sleep habits, occupation, and sleep disorders. Stay active and healthy!
+        This app provides personalized exercise recommendations based on your age, weight, sleep habits, sleep duration, blood pressure, and sleep disorders. Stay active and healthy!
         </p>
         """,
         unsafe_allow_html=True
@@ -121,16 +114,17 @@ with st.form("user_details_form"):
     with col2:
         st.markdown("#### :zzz: Sleep Information")
         sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Do you experience any diagnosed sleep disorders?")
+        sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="How many hours of sleep do you get on average?")
 
-    st.markdown("#### :briefcase: Work Lifestyle")
-    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Select your level of daily activity.")
+    st.markdown("#### :heartbeat: Blood Pressure")
+    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure (mmHg).")
 
     st.markdown("---")
     submit_button = st.form_submit_button("Get Recommendations")
 
 # Generate Recommendation
 if submit_button:
-    recommended_exercises = recommend_exercise(age, weight, sleep_disorder, occupation)
+    recommended_exercises = recommend_exercise(age, weight, sleep_disorder, sleep_duration, blood_pressure)
     st.markdown("### :sparkles: Your Recommended Exercises")
 
     if recommended_exercises:
