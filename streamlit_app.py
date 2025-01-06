@@ -60,11 +60,11 @@ st.markdown(
     """
     <style>
     body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #f7f9fc;
+        font-family: 'Roboto', sans-serif;
+        background-color: #f3f6f9;
     }
     .main-header {
-        background: linear-gradient(to right, #00796b, #48c6ef);
+        background: linear-gradient(to right, #4caf50, #81c784);
         color: white;
         text-align: center;
         padding: 20px 0;
@@ -72,59 +72,74 @@ st.markdown(
         margin-bottom: 20px;
     }
     .form-container {
-        background: #ffffff;
-        border: 1px solid #dee2e6;
+        background: white;
+        border: 1px solid #e0e0e0;
         border-radius: 10px;
-        padding: 30px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .recommendation-container {
-        background: #e3f2fd;
-        border: 1px solid #90caf9;
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
         border-radius: 10px;
         padding: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
     .footer {
         text-align: center;
-        color: #00796b;
+        color: #4caf50;
         margin-top: 30px;
         font-size: 14px;
     }
     .footer span {
         color: red;
     }
+    .sidebar-section {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Empower your wellness journey with personalized exercise plans tailored to your health and lifestyle.</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Transform your fitness journey with personalized exercise recommendations.</p></div>', unsafe_allow_html=True)
 
 # Sidebar for Info and Insights
 with st.sidebar:
+    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
     st.header("About This App")
     st.markdown(
         """
-        <p style="font-size:14px;">This app provides scientifically curated exercise recommendations based on critical factors like age, weight, occupation, sleep patterns, stress levels, blood pressure, and overall lifestyle. Elevate your fitness goals with insights tailored just for you!</p>
+        <p style="font-size:14px;">This app delivers tailored exercise recommendations by analyzing critical factors such as age, weight, occupation, sleep habits, stress levels, blood pressure, and overall lifestyle. Begin your journey to better fitness today!</p>
         """,
         unsafe_allow_html=True
     )
-    st.write("---")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
     st.header("Quick Tips")
     st.markdown(
         """
-        - Provide accurate details for optimal suggestions.<br>
-        - Follow recommendations regularly for better results.<br>
-        - Check back periodically for updated plans.
+        <ul style="padding-left: 20px; font-size:14px;">
+        <li>Ensure your details are accurate for optimal recommendations.</li>
+        <li>Revisit the app regularly for updated insights.</li>
+        <li>Follow suggestions consistently for better outcomes.</li>
+        </ul>
         """,
         unsafe_allow_html=True
     )
-    st.write("---")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
     st.header("Session Insights")
     session_duration = datetime.now() - session_start
     st.metric(label="Total Recommendations", value=recommendation_count)
     st.metric(label="Session Duration", value=f"{session_duration.seconds} seconds")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('<div class="form-container">', unsafe_allow_html=True)
 
@@ -158,7 +173,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 if submit_button:
     recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, stress_level, blood_pressure)
     st.markdown('<div class="recommendation-container">', unsafe_allow_html=True)
-    st.markdown("### Personalized Recommendations")
+    st.markdown("### Your Personalized Recommendations")
 
     if recommended_exercises:
         st.markdown("Your suggested activities include:")
@@ -174,7 +189,7 @@ if submit_button:
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness.</p>
+        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
     </div>
     """,
     unsafe_allow_html=True
