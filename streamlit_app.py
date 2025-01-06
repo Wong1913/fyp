@@ -15,7 +15,7 @@ mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
 
 # Categorize fitness_data exercises by 'Calories per kg'
 fitness_data['Intensity'] = pd.cut(
-    fitness_data['Calories per kg'],
+    fitness_data['Calories per kg'], 
     bins=[0, 1.0, 2.0, fitness_data['Calories per kg'].max()],
     labels=['Low', 'Medium', 'High']
 )
@@ -101,6 +101,9 @@ st.markdown(
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         margin-bottom: 15px;
+    }
+    .stSlider > div[role='slider'] {
+        background-color: #0288d1;
     }
     </style>
     """,
