@@ -33,15 +33,15 @@ recommendation_count = 0
 session_start = datetime.now()
 
 # Recommendation Logic
-def recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, blood_pressure):
+def recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, stress_level, blood_pressure):
     global recommendation_count
     recommendation_count += 1
 
-    if blood_pressure > 140 or (sleep_disorder == 'Yes' and sleep_duration < 6):
+    if blood_pressure > 140 or stress_level > 7 or (sleep_disorder == 'Yes' and sleep_duration < 6):
         category = "Low"
-    elif occupation == 'Sedentary' and (age > 50 or weight > 80):
+    elif occupation == 'Sedentary' and (age > 50 or weight > 80 or stress_level > 5):
         category = "Medium"
-    elif occupation == 'Active' and age < 30 and weight < 70 and sleep_duration >= 7 and blood_pressure <= 120:
+    elif occupation == 'Active' and age < 30 and weight < 70 and sleep_duration >= 7 and stress_level <= 4 and blood_pressure <= 120:
         category = "High"
     else:
         category = "Medium"
@@ -106,7 +106,7 @@ with st.sidebar:
     st.header("About This App")
     st.markdown(
         """
-        <p style="font-size:14px;">This app provides scientifically curated exercise recommendations based on critical factors like age, weight, occupation, sleep patterns, blood pressure, and overall lifestyle. Elevate your fitness goals with insights tailored just for you!</p>
+        <p style="font-size:14px;">This app provides scientifically curated exercise recommendations based on critical factors like age, weight, occupation, sleep patterns, stress levels, blood pressure, and overall lifestyle. Elevate your fitness goals with insights tailored just for you!</p>
         """,
         unsafe_allow_html=True
     )
@@ -144,6 +144,7 @@ with st.form("user_details_form"):
 
     st.markdown("### Lifestyle")
     occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Choose your daily activity level.")
+    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5, help="Rate your current stress level on a scale of 2 to 10.")
 
     st.markdown("### Health Metrics")
     blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure (mmHg).")
@@ -155,7 +156,7 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 # Generate Recommendation
 if submit_button:
-    recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, blood_pressure)
+    recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, stress_level, blood_pressure)
     st.markdown('<div class="recommendation-container">', unsafe_allow_html=True)
     st.markdown("### Personalized Recommendations")
 
