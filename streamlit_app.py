@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import random
+from datetime import datetime
 
 # Load necessary datasets
 sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
@@ -27,8 +28,15 @@ exercise_mapping = {
     "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
 }
 
+# Analytics Tracking
+recommendation_count = 0
+session_start = datetime.now()
+
+# Recommendation Logic
 def recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, blood_pressure):
-    # Adjust category based on age, weight, occupation, sleep disorder, sleep duration, and blood pressure
+    global recommendation_count
+    recommendation_count += 1
+
     if blood_pressure > 140 or (sleep_disorder == 'Yes' and sleep_duration < 6):
         category = "Low"
     elif occupation == 'Sedentary' and (age > 50 or weight > 80):
@@ -38,18 +46,16 @@ def recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, 
     else:
         category = "Medium"
 
-    # Map category to mega_gym_mapping keys
     category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Expert"}
     gym_category = category_mapping.get(category, "Beginner")
 
-    # Fetch exercises
     fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
     gym_exercises = random.sample(mega_gym_mapping.get(gym_category, []), min(7, len(mega_gym_mapping.get(gym_category, []))))
 
     return fitness_exercises + gym_exercises
 
 # Streamlit App
-st.set_page_config(page_title="Exercise Recommendation System", page_icon=":runner:", layout="wide")
+st.set_page_config(page_title="Exercise Recommendation System", page_icon="🏋️", layout="wide")
 st.markdown(
     """
     <style>
@@ -95,7 +101,7 @@ st.markdown(
 
 st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Get personalized exercise plans based on your health and lifestyle.</p></div>', unsafe_allow_html=True)
 
-# Add a sidebar for navigation and additional info
+# Sidebar for Info and Insights
 with st.sidebar:
     st.header("About This App")
     st.markdown(
@@ -113,6 +119,11 @@ with st.sidebar:
         """,
         unsafe_allow_html=True
     )
+    st.write("---")
+    st.header("Session Analytics")
+    session_duration = datetime.now() - session_start
+    st.metric(label="Total Recommendations", value=recommendation_count)
+    st.metric(label="Session Duration", value=f"{session_duration.seconds} seconds")
 
 st.markdown('<div class="form-container">', unsafe_allow_html=True)
 
