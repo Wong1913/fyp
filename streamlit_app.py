@@ -3,19 +3,29 @@ import pandas as pd
 import numpy as np
 import random
 import altair as alt
+import sqlite3
+from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
-# Simulated health performance data (replace with real user data in production)
-health_data = pd.DataFrame({
-    'Date': pd.date_range(start="2025-01-01", periods=10, freq='D'),
-    'Weight (kg)': np.random.randint(60, 90, size=10),
-    'Stress Level': np.random.randint(2, 10, size=10),
-    'Sleep Duration (hrs)': np.random.uniform(5, 9, size=10).round(1),
-    'Blood Pressure (mmHg)': np.random.randint(110, 150, size=10)
-})
+# Database setup
+conn = sqlite3.connect('health_data.db')
+cursor = conn.cursor()
+
+# Create table if not exists
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS health_performance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT,
+    weight REAL,
+    stress_level INTEGER,
+    sleep_duration REAL,
+    blood_pressure INTEGER
+)
+''')
+conn.commit()
 
 # Load datasets
 mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/megaGymDataset.csv')
@@ -65,43 +75,70 @@ rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
 rf_clf.fit(X_train, y_train)
 accuracy = accuracy_score(y_test, rf_clf.predict(X_test))
 
+# Fetch data from database
+health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
+if not health_data.empty:
+    health_data['Date'] = pd.to_datetime(health_data['date'])
+
 # Header
 st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
 
-# Progress Tracking Section
+# Health Performance Tracking
 st.markdown("## Your Health Performance Over Time")
-performance_chart = alt.Chart(health_data).transform_fold(
-    ['Weight (kg)', 'Stress Level', 'Sleep Duration (hrs)', 'Blood Pressure (mmHg)'],
-    as_=['Metric', 'Value']
-).mark_line(point=True).encode(
-    x='Date:T',
-    y='Value:Q',
-    color='Metric:N',
-    tooltip=['Date:T', 'Metric:N', 'Value:Q']
-).interactive()
-st.altair_chart(performance_chart, use_container_width=True)
+if not health_data.empty:
+    performance_chart = alt.Chart(health_data).transform_fold(
+        ['weight', 'stress_level', 'sleep_duration', 'blood_pressure'],
+        as_=['Metric', 'Value']
+    ).mark_line(point=True).encode(
+        x='Date:T',
+        y='Value:Q',
+        color='Metric:N',
+        tooltip=['Date:T', 'Metric:N', 'Value:Q']
+    ).interactive()
+    st.altair_chart(performance_chart, use_container_width=True)
+else:
+    st.info("No health data available. Add your first entry below!")
 
-# User Input Form
-st.markdown('<div class="container">', unsafe_allow_html=True)
+# Update Health Data Form
+st.markdown("## Update Your Health Data")
+with st.form("update_health_data"):
+    weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
+    stress_level = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
+    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
+    update_button = st.form_submit_button("Update Health Data")
+
+if update_button:
+    cursor.execute(
+        '''
+        INSERT INTO health_performance (date, weight, stress_level, sleep_duration, blood_pressure)
+        VALUES (?, ?, ?, ?, ?)
+        ''',
+        (datetime.now().strftime("%Y-%m-%d"), weight, stress_level, sleep_duration, blood_pressure)
+    )
+    conn.commit()
+    st.success("Health data updated successfully!")
+
+# User Input Form for Recommendations
+st.markdown("## Get Personalized Recommendations")
 with st.form("user_details_form"):
     st.markdown("### Your Details")
     age = st.number_input("Age", min_value=1, max_value=120, value=30)
-    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
+    weight_input = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
     occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
     sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
-    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
-    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5)
-    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
+    sleep_duration_input = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+    stress_level_input = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
+    blood_pressure_input = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
     submit_button = st.form_submit_button("Generate Recommendations")
-st.markdown('</div>', unsafe_allow_html=True)
 
 if submit_button:
     # Predict Category
     user_data = scaler.transform([[
-        age, weight, 
+        age, weight_input, 
         0 if occupation == "Active" else 1,
         0 if sleep_disorder == "No" else 1,
-        sleep_duration, stress_level, blood_pressure
+        sleep_duration_input, stress_level_input, blood_pressure_input
     ]])
     predicted_category = rf_clf.predict(user_data)[0]
 
@@ -130,6 +167,10 @@ st.markdown(
     """, 
     unsafe_allow_html=True
 )
+
+# Close the database connection when the app stops
+conn.close()
+
 
 
 
