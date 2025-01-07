@@ -5,7 +5,6 @@ import random
 from datetime import datetime
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 
 # Load necessary datasets
 sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
@@ -41,10 +40,12 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Encode categorical variables
-encoder = LabelEncoder()
-df['Occupation'] = encoder.fit_transform(df['Occupation'])  # Active = 0, Sedentary = 1
-df['Sleep_Disorder'] = encoder.fit_transform(df['Sleep_Disorder'])  # No = 0, Yes = 1
+# Manually map categorical variables
+occupation_mapping = {'Active': 0, 'Sedentary': 1}
+sleep_disorder_mapping = {'No': 0, 'Yes': 1}
+
+df['Occupation'] = df['Occupation'].map(occupation_mapping)
+df['Sleep_Disorder'] = df['Sleep_Disorder'].map(sleep_disorder_mapping)
 
 # Split data into features and labels
 X = df[['Age', 'Weight', 'Occupation', 'Sleep_Disorder', 'Sleep_Duration', 'Stress_Level', 'Blood_Pressure']]
@@ -63,15 +64,6 @@ st.markdown('<h1 style="text-align: center; color: #01579b;">Exercise Recommenda
 
 st.markdown('<h3>Enter your details for personalized exercise recommendations:</h3>', unsafe_allow_html=True)
 
-# Function to handle unseen labels
-def safe_encode(encoder, value, default_value):
-    if default_value not in encoder.classes_:
-        encoder.classes_ = np.append(encoder.classes_, default_value)
-    if value in encoder.classes_:
-        return encoder.transform([value])[0]
-    else:
-        return encoder.transform([default_value])[0]
-
 # User Inputs
 with st.form("user_details_form"):
     age = st.number_input("Age", min_value=1, max_value=120, value=30)
@@ -84,25 +76,46 @@ with st.form("user_details_form"):
     submit_button = st.form_submit_button("Generate Recommendations")
 
 if submit_button:
+    # Map user inputs using the same mappings
+    user_occupation = occupation_mapping.get(occupation, 1)  # Default to 'Sedentary' if unknown
+    user_sleep_disorder = sleep_disorder_mapping.get(sleep_disorder, 0)  # Default to 'No' if unknown
+
+    # Create user input DataFrame
     user_data = pd.DataFrame({
         'Age': [age],
         'Weight': [weight],
-        'Occupation': [safe_encode(encoder, occupation, default_value="Sedentary")],
-        'Sleep_Disorder': [safe_encode(encoder, sleep_disorder, default_value="No")],
+        'Occupation': [user_occupation],
+        'Sleep_Disorder': [user_sleep_disorder],
         'Sleep_Duration': [sleep_duration],
         'Stress_Level': [stress_level],
         'Blood_Pressure': [blood_pressure]
     })
 
+    # Predict exercise category
     predicted_category = clf.predict(user_data)[0]
+
+    # Fetch recommendations
     recommended_exercises = exercise_mapping.get(predicted_category, [])
     st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
     
     if recommended_exercises:
-        for i, exercise in enumerate(recommended_exercises, start=1):
+        # Limit the number of exercises displayed
+        num_exercises_to_show = min(10, len(recommended_exercises))
+        exercises_to_show = random.sample(recommended_exercises, num_exercises_to_show)
+        for i, exercise in enumerate(exercises_to_show, start=1):
             st.markdown(f"{i}. {exercise}")
     else:
         st.warning("No exercises available for the predicted category. Please adjust your inputs.")
+
+# Footer
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 50px;">
+        <p><strong>Stay healthy, stay active!</strong> Created with <span style="color: red;">♥</span> using Streamlit for your wellness journey.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 
 
