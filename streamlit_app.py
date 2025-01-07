@@ -2,13 +2,21 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import random
+import altair as alt
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
+# Simulated progress data (to be replaced with a database in a real application)
+progress_data = pd.DataFrame({
+    'Date': pd.date_range(start="2025-01-01", periods=10, freq='D'),
+    'Intensity': np.random.choice(['Low', 'Medium', 'High'], size=10),
+    'Calories Burned': np.random.randint(100, 500, size=10),
+    'Duration (mins)': np.random.randint(30, 120, size=10)
+})
+
 # Load datasets
-sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
 mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/megaGymDataset.csv')
 fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
 
@@ -36,99 +44,65 @@ exercise_mapping = {
     }
 }
 
-# Prepare training data
-data = {
+# Train a Decision Tree Classifier (placeholder logic)
+df = pd.DataFrame({
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
-    'Occupation': ['Active', 'Sedentary', 'Sedentary', 'Sedentary', 'Active'],
-    'Sleep_Disorder': ['No', 'Yes', 'No', 'Yes', 'No'],
+    'Occupation': [0, 1, 1, 1, 0],  # 0: Active, 1: Sedentary
+    'Sleep_Disorder': [0, 1, 0, 1, 0],  # 0: No, 1: Yes
     'Sleep_Duration': [7, 5, 6, 5, 8],
     'Stress_Level': [3, 8, 5, 7, 2],
     'Blood_Pressure': [120, 145, 130, 150, 110],
     'Category': ['High', 'Low', 'Medium', 'Low', 'High']
-}
-
-df = pd.DataFrame(data)
-
-# Map categorical variables
-occupation_mapping = {'Active': 0, 'Sedentary': 1}
-sleep_disorder_mapping = {'No': 0, 'Yes': 1}
-
-df['Occupation'] = df['Occupation'].map(occupation_mapping)
-df['Sleep_Disorder'] = df['Sleep_Disorder'].map(sleep_disorder_mapping)
-
-# Split data
+})
 X = df[['Age', 'Weight', 'Occupation', 'Sleep_Disorder', 'Sleep_Duration', 'Stress_Level', 'Blood_Pressure']]
 y = df['Category']
-
-# Normalize features
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
-
-# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Train a Decision Tree Classifier
 clf = DecisionTreeClassifier(random_state=42)
 clf.fit(X_train, y_train)
+accuracy = accuracy_score(y_test, clf.predict(X_test))
 
-# Calculate model accuracy
-y_pred = clf.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-
-# Custom CSS for styling
-st.markdown(
-    """
-    <style>
-    body {
-        font-family: 'Arial', sans-serif;
-        background-color: #e3f2fd; /* Baby Blue */
-    }
-    .header {
-        background: linear-gradient(to right, #64b5f6, #bbdefb); /* Light Blue Gradient */
-        padding: 30px;
-        border-radius: 8px;
-        text-align: center;
-        color: white;
-        font-size: 2rem;
-        font-weight: bold;
-    }
-    .subheader {
-        text-align: center;
-        color: #1565c0; /* Deep Blue */
-        font-size: 1.2rem;
-        margin-top: -10px;
-    }
-    .container {
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-    }
-    .recommendation {
-        background-color: #e3f2fd; /* Baby Blue */
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .footer {
-        text-align: center;
-        margin-top: 30px;
-        font-size: 0.9rem;
-        color: #757575;
-    }
-    .footer span {
-        color: #64b5f6; /* Light Blue */
-    }
-    </style>
-    """, 
-    unsafe_allow_html=True
-)
+# UI with Light/Dark Mode
+theme = st.sidebar.radio("Select Theme", ['Light', 'Dark'])
+if theme == 'Dark':
+    st.markdown(
+        """
+        <style>
+        body { background-color: #121212; color: white; }
+        .container { background-color: #1e1e1e; color: white; }
+        .recommendation { background-color: #242424; }
+        .footer { color: white; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+else:
+    st.markdown(
+        """
+        <style>
+        body { background-color: #e3f2fd; color: black; }
+        .container { background-color: white; color: black; }
+        .recommendation { background-color: #e3f2fd; }
+        .footer { color: black; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 # Header
 st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
-st.markdown('<div class="subheader">Personalized suggestions to achieve your fitness goals</div>', unsafe_allow_html=True)
+
+# Progress Tracking Section
+st.markdown("## Your Progress Over Time")
+chart = alt.Chart(progress_data).mark_line(point=True).encode(
+    x='Date:T',
+    y='Calories Burned:Q',
+    color='Intensity:N',
+    tooltip=['Date:T', 'Calories Burned:Q', 'Duration (mins):Q', 'Intensity:N']
+).interactive()
+st.altair_chart(chart, use_container_width=True)
 
 # User Input Form
 st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -145,45 +119,41 @@ with st.form("user_details_form"):
 st.markdown('</div>', unsafe_allow_html=True)
 
 if submit_button:
-    # Validate inputs
-    if age <= 0 or weight <= 0 or blood_pressure <= 0:
-        st.error("Please provide valid inputs.")
+    # Predict Category
+    user_data = scaler.transform([[
+        age, weight, 
+        0 if occupation == "Active" else 1,
+        0 if sleep_disorder == "No" else 1,
+        sleep_duration, stress_level, blood_pressure
+    ]])
+    predicted_category = clf.predict(user_data)[0]
+
+    # Fetch Recommendations
+    fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
+    gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
+    recommendations = random.sample(fitness_exercises, min(2, len(fitness_exercises))) + \
+                      random.sample(gym_exercises, min(7, len(gym_exercises)))
+
+    # Display Recommendations
+    st.markdown('<div class="recommendation">', unsafe_allow_html=True)
+    st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
+    if recommendations:
+        for i, exercise in enumerate(recommendations, start=1):
+            st.markdown(f"{i}. {exercise}")
     else:
-        # Scale and Predict
-        user_data = scaler.transform([[
-            age, weight, 
-            occupation_mapping.get(occupation, 1),
-            sleep_disorder_mapping.get(sleep_disorder, 0),
-            sleep_duration, stress_level, blood_pressure
-        ]])
-        predicted_category = clf.predict(user_data)[0]
-
-        # Fetch recommendations
-        fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
-        gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
-        selected_fitness_exercises = random.sample(fitness_exercises, min(2, len(fitness_exercises)))
-        selected_gym_exercises = random.sample(gym_exercises, min(7, len(gym_exercises)))
-        recommendations = selected_fitness_exercises + selected_gym_exercises
-
-        # Display recommendations
-        st.markdown('<div class="recommendation">', unsafe_allow_html=True)
-        st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
-        if recommendations:
-            for i, exercise in enumerate(recommendations, start=1):
-                st.markdown(f"{i}. {exercise}")
-        else:
-            st.warning("No exercises available for the predicted category.")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.warning("No exercises available for the predicted category.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Achieve your fitness goals!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
+        <p><strong>Track your fitness journey!</strong> Created with <span>♥</span> using Streamlit.</p>
     </div>
     """, 
     unsafe_allow_html=True
 )
+
 
 
 
