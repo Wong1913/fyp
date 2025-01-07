@@ -84,6 +84,7 @@ if not health_data.empty:
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
     body {
         font-family: 'Arial', sans-serif;
         background-color: #e1f5fe; /* Baby Blue Background */
@@ -95,7 +96,8 @@ st.markdown(
         border-radius: 8px;
         text-align: center;
         color: white;
-        font-size: 2rem;
+        font-size: 2.5rem;
+        font-family: 'Poppins', sans-serif;
         margin-bottom: 20px;
     }
     .container {
@@ -213,6 +215,7 @@ st.markdown(
 )
 
 conn.close()
+
 
 
 
