@@ -65,13 +65,12 @@ st.markdown('<h3>Enter your details for personalized exercise recommendations:</
 
 # Function to handle unseen labels
 def safe_encode(encoder, value, default_value):
+    if default_value not in encoder.classes_:
+        encoder.classes_ = np.append(encoder.classes_, default_value)
     if value in encoder.classes_:
         return encoder.transform([value])[0]
     else:
         return encoder.transform([default_value])[0]
-
-# Add "Unknown" class to the encoder to handle unseen labels
-encoder.classes_ = np.append(encoder.classes_, ["Unknown"])
 
 # User Inputs
 with st.form("user_details_form"):
@@ -85,7 +84,6 @@ with st.form("user_details_form"):
     submit_button = st.form_submit_button("Generate Recommendations")
 
 if submit_button:
-    # Encode user inputs
     user_data = pd.DataFrame({
         'Age': [age],
         'Weight': [weight],
@@ -96,10 +94,7 @@ if submit_button:
         'Blood_Pressure': [blood_pressure]
     })
 
-    # Predict exercise category
     predicted_category = clf.predict(user_data)[0]
-
-    # Fetch recommendations
     recommended_exercises = exercise_mapping.get(predicted_category, [])
     st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
     
@@ -109,15 +104,6 @@ if submit_button:
     else:
         st.warning("No exercises available for the predicted category. Please adjust your inputs.")
 
-# Footer
-st.markdown(
-    """
-    <div style="text-align: center; margin-top: 50px;">
-        <p><strong>Stay healthy, stay active!</strong> Created with <span style="color: red;">♥</span> using Streamlit for your wellness journey.</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 
 
