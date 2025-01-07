@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import random
 from datetime import datetime
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 # Load necessary datasets
 sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
@@ -10,10 +13,7 @@ mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs
 fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
 
 # Preprocess datasets
-# Group exercises in megaGymDataset by 'Level'
 mega_gym_mapping = mega_gym_data.groupby('Level')['Title'].apply(list).to_dict()
-
-# Categorize fitness_data exercises by 'Calories per kg'
 fitness_data['Intensity'] = pd.cut(
     fitness_data['Calories per kg'], 
     bins=[0, 1.0, 2.0, fitness_data['Calories per kg'].max()],
@@ -21,183 +21,85 @@ fitness_data['Intensity'] = pd.cut(
 )
 fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport (1 hour)'].apply(list).to_dict()
 
-# Combine mappings
 exercise_mapping = {
     "Low": fitness_mapping.get('Low', []) + mega_gym_mapping.get('Beginner', []),
     "Medium": fitness_mapping.get('Medium', []) + mega_gym_mapping.get('Intermediate', []),
     "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
 }
 
-# Analytics Tracking
-recommendation_count = 0
-session_start = datetime.now()
+# Prepare training data for decision tree
+# Create a labeled dataset (this example uses dummy data, replace with real labeled data if available)
+data = {
+    'Age': [25, 55, 35, 60, 20],
+    'Weight': [70, 90, 80, 85, 60],
+    'Occupation': ['Active', 'Sedentary', 'Sedentary', 'Sedentary', 'Active'],
+    'Sleep_Disorder': ['No', 'Yes', 'No', 'Yes', 'No'],
+    'Sleep_Duration': [7, 5, 6, 5, 8],
+    'Stress_Level': [3, 8, 5, 7, 2],
+    'Blood_Pressure': [120, 145, 130, 150, 110],
+    'Category': ['High', 'Low', 'Medium', 'Low', 'High']
+}
 
-# Recommendation Logic
-def recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, stress_level, blood_pressure):
-    global recommendation_count
-    recommendation_count += 1
+df = pd.DataFrame(data)
 
-    if blood_pressure > 140 or stress_level > 7 or (sleep_disorder == 'Yes' and sleep_duration < 6):
-        category = "Low"
-    elif occupation == 'Sedentary' and (age > 50 or weight > 80 or stress_level > 5):
-        category = "Medium"
-    elif occupation == 'Active' and age < 30 and weight < 70 and sleep_duration >= 7 and stress_level <= 4 and blood_pressure <= 120:
-        category = "High"
-    else:
-        category = "Medium"
+# Encode categorical variables
+encoder = LabelEncoder()
+df['Occupation'] = encoder.fit_transform(df['Occupation'])  # Active = 0, Sedentary = 1
+df['Sleep_Disorder'] = encoder.fit_transform(df['Sleep_Disorder'])  # No = 0, Yes = 1
 
-    category_mapping = {"Low": "Beginner", "Medium": "Intermediate", "High": "Expert"}
-    gym_category = category_mapping.get(category, "Beginner")
+# Split data into features and labels
+X = df[['Age', 'Weight', 'Occupation', 'Sleep_Disorder', 'Sleep_Duration', 'Stress_Level', 'Blood_Pressure']]
+y = df['Category']
 
-    fitness_exercises = random.sample(fitness_mapping.get(category, []), min(2, len(fitness_mapping.get(category, []))))
-    gym_exercises = random.sample(mega_gym_mapping.get(gym_category, []), min(7, len(mega_gym_mapping.get(gym_category, []))))
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    return fitness_exercises + gym_exercises
+# Train a Decision Tree Classifier
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
 
 # Streamlit App
 st.set_page_config(page_title="Exercise Recommendation System", page_icon="🏋️", layout="wide")
-st.markdown(
-    """
-    <style>
-    body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #e3f2fd;
-        color: #01579b;
-    }
-    .main-header {
-        background: linear-gradient(to right, #0288d1, #b3e5fc);
-        color: white;
-        text-align: center;
-        padding: 20px 0;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    .form-container {
-        background: #ffffff;
-        border: 1px solid #bbdefb;
-        border-radius: 10px;
-        padding: 25px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .recommendation-container {
-        background: #e1f5fe;
-        border: 1px solid #81d4fa;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .footer {
-        text-align: center;
-        color: #0288d1;
-        margin-top: 30px;
-        font-size: 14px;
-    }
-    .footer span {
-        color: #d32f2f;
-    }
-    .sidebar-section {
-        background-color: #ffffff;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 15px;
-    }
-    .stSlider > div[role='slider'] {
-        background-color: #0288d1;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown('<h1 style="text-align: center; color: #01579b;">Exercise Recommendation System</h1>', unsafe_allow_html=True)
 
-st.markdown('<div class="main-header"><h1>Exercise Recommendation System</h1><p>Transform your fitness journey with personalized exercise recommendations.</p></div>', unsafe_allow_html=True)
-
-# Sidebar for Info and Insights
-with st.sidebar:
-    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-    st.header("About This App")
-    st.markdown(
-        """
-        <p style="font-size:14px;">This app delivers tailored exercise recommendations by analyzing critical factors such as age, weight, occupation, sleep habits, stress levels, blood pressure, and overall lifestyle. Begin your journey to better fitness today!</p>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-    st.header("Quick Tips")
-    st.markdown(
-        """
-        <ul style="padding-left: 20px; font-size:14px;">
-        <li>Ensure your details are accurate for optimal recommendations.</li>
-        <li>Revisit the app regularly for updated insights.</li>
-        <li>Follow suggestions consistently for better outcomes.</li>
-        </ul>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
-    st.header("Session Insights")
-    session_duration = datetime.now() - session_start
-    st.metric(label="Total Recommendations", value=recommendation_count)
-    st.metric(label="Session Duration", value=f"{session_duration.seconds} seconds")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="form-container">', unsafe_allow_html=True)
+st.markdown('<h3>Enter your details for personalized exercise recommendations:</h3>', unsafe_allow_html=True)
 
 # User Inputs
 with st.form("user_details_form"):
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("### Personal Information")
-        age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age in years.")
-        weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight in kilograms.")
-
-    with col2:
-        st.markdown("### Sleep Details")
-        sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Diagnosed sleep issues? Select Yes or No.")
-        sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="Average hours of sleep per day.")
-
-    st.markdown("### Lifestyle")
-    occupation = st.selectbox("Occupation", ["Sedentary", "Active"], help="Choose your daily activity level.")
-    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5, help="Rate your current stress level on a scale of 2 to 10.")
-
-    st.markdown("### Health Metrics")
-    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure (mmHg).")
-
-    st.markdown("---")
+    age = st.number_input("Age", min_value=1, max_value=120, value=30)
+    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
+    occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
+    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
+    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5)
+    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
     submit_button = st.form_submit_button("Generate Recommendations")
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Generate Recommendation
 if submit_button:
-    recommended_exercises = recommend_exercise(age, weight, occupation, sleep_disorder, sleep_duration, stress_level, blood_pressure)
-    st.markdown('<div class="recommendation-container">', unsafe_allow_html=True)
-    st.markdown("### Your Personalized Recommendations")
+    # Encode user inputs to match the trained model
+    user_data = pd.DataFrame({
+        'Age': [age],
+        'Weight': [weight],
+        'Occupation': [encoder.transform([occupation])[0]],
+        'Sleep_Disorder': [encoder.transform([sleep_disorder])[0]],
+        'Sleep_Duration': [sleep_duration],
+        'Stress_Level': [stress_level],
+        'Blood_Pressure': [blood_pressure]
+    })
 
+    # Predict exercise category
+    predicted_category = clf.predict(user_data)[0]
+
+    # Fetch recommendations
+    recommended_exercises = exercise_mapping.get(predicted_category, [])
+    st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
+    
     if recommended_exercises:
-        st.markdown("Your suggested activities include:")
-        st.markdown("<ul style='font-size:16px;'>", unsafe_allow_html=True)
         for i, exercise in enumerate(recommended_exercises, start=1):
-            st.markdown(f"<li>{exercise}</li>", unsafe_allow_html=True)
-        st.markdown("</ul>", unsafe_allow_html=True)
+            st.markdown(f"{i}. {exercise}")
     else:
-        st.warning("Unable to generate suggestions with the provided details. Try refining your inputs.")
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.warning("No exercises available for the predicted category. Please adjust your inputs.")
 
-# Footer
-st.markdown(
-    """
-    <div class="footer">
-        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 
 
