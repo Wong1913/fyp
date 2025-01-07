@@ -82,20 +82,20 @@ st.markdown(
     <style>
     body {
         font-family: 'Arial', sans-serif;
-        background-color: #f7f9fc;
+        background-color: #e3f2fd; /* Baby Blue */
     }
     .header {
-        background: linear-gradient(to right, #4caf50, #81c784);
+        background: linear-gradient(to right, #64b5f6, #bbdefb); /* Light Blue Gradient */
         padding: 30px;
         border-radius: 8px;
         text-align: center;
         color: white;
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: bold;
     }
     .subheader {
         text-align: center;
-        color: #4caf50;
+        color: #1565c0; /* Deep Blue */
         font-size: 1.2rem;
         margin-top: -10px;
     }
@@ -107,7 +107,7 @@ st.markdown(
         margin-bottom: 20px;
     }
     .recommendation {
-        background-color: #e8f5e9;
+        background-color: #e3f2fd; /* Baby Blue */
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -119,7 +119,7 @@ st.markdown(
         color: #757575;
     }
     .footer span {
-        color: #4caf50;
+        color: #64b5f6; /* Light Blue */
     }
     </style>
     """, 
@@ -127,8 +127,8 @@ st.markdown(
 )
 
 # Header
-st.markdown('<div class="header">Advanced Exercise Recommendation System</div>', unsafe_allow_html=True)
-st.markdown('<div class="subheader">Personalized recommendations based on your lifestyle</div>', unsafe_allow_html=True)
+st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader">Personalized suggestions to achieve your fitness goals</div>', unsafe_allow_html=True)
 
 # User Input Form
 st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -179,11 +179,12 @@ if submit_button:
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
+        <p><strong>Achieve your fitness goals!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
     </div>
     """, 
     unsafe_allow_html=True
 )
+
 
 
 
