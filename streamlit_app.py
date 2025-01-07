@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import random
-from datetime import datetime
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -77,40 +76,89 @@ clf.fit(X_train, y_train)
 y_pred = clf.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 
-# Streamlit App
-st.set_page_config(page_title="Advanced Exercise Recommendation", page_icon="🏋️", layout="wide")
+# Custom CSS for styling
+st.markdown(
+    """
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f7f9fc;
+    }
+    .header {
+        background: linear-gradient(to right, #4caf50, #81c784);
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        color: white;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    .subheader {
+        text-align: center;
+        color: #4caf50;
+        font-size: 1.2rem;
+        margin-top: -10px;
+    }
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .recommendation {
+        background-color: #e8f5e9;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 0.9rem;
+        color: #757575;
+    }
+    .footer span {
+        color: #4caf50;
+    }
+    </style>
+    """, 
+    unsafe_allow_html=True
+)
 
-st.markdown('<h1 style="text-align: center; color: #01579b;">Advanced Exercise Recommendation System</h1>', unsafe_allow_html=True)
-st.markdown('<h3>Enter your details for personalized recommendations:</h3>', unsafe_allow_html=True)
+# Header
+st.markdown('<div class="header">Advanced Exercise Recommendation System</div>', unsafe_allow_html=True)
+st.markdown('<div class="subheader">Personalized recommendations based on your lifestyle</div>', unsafe_allow_html=True)
 
-# User Inputs
+# User Input Form
+st.markdown('<div class="container">', unsafe_allow_html=True)
 with st.form("user_details_form"):
-    age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age.")
-    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight.")
-    occupation = st.selectbox("Occupation", ["Active", "Sedentary"], help="Select your daily activity level.")
-    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Diagnosed sleep issues?")
-    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="Average hours of sleep per day.")
-    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5, help="Rate your current stress level.")
-    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure.")
+    st.markdown("### Your Details")
+    age = st.number_input("Age", min_value=1, max_value=120, value=30)
+    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
+    occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
+    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
+    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5)
+    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
     submit_button = st.form_submit_button("Generate Recommendations")
+st.markdown('</div>', unsafe_allow_html=True)
 
 if submit_button:
     # Validate inputs
     if age <= 0 or weight <= 0 or blood_pressure <= 0:
         st.error("Please provide valid inputs.")
     else:
-        # Map inputs and scale
+        # Scale and Predict
         user_data = scaler.transform([[
             age, weight, 
-            occupation_mapping.get(occupation, 1),  # Default to 'Sedentary'
-            sleep_disorder_mapping.get(sleep_disorder, 0),  # Default to 'No'
+            occupation_mapping.get(occupation, 1),
+            sleep_disorder_mapping.get(sleep_disorder, 0),
             sleep_duration, stress_level, blood_pressure
         ]])
-
-        # Predict category
         predicted_category = clf.predict(user_data)[0]
 
-        # Fetch recommendations: 2 fitness + 7 gym
+        # Fetch recommendations
         fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
         gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
         selected_fitness_exercises = random.sample(fitness_exercises, min(2, len(fitness_exercises)))
@@ -118,15 +166,25 @@ if submit_button:
         recommendations = selected_fitness_exercises + selected_gym_exercises
 
         # Display recommendations
-        st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
+        st.markdown('<div class="recommendation">', unsafe_allow_html=True)
+        st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
         if recommendations:
             for i, exercise in enumerate(recommendations, start=1):
                 st.markdown(f"{i}. {exercise}")
         else:
             st.warning("No exercises available for the predicted category.")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Display model metrics
-        st.markdown(f"<h4>Model Accuracy: {accuracy * 100:.2f}%</h4>", unsafe_allow_html=True)
+# Footer
+st.markdown(
+    """
+    <div class="footer">
+        <p><strong>Stay healthy, stay active!</strong> Created with <span>♥</span> using Streamlit for your wellness journey.</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
+
 
 
 
