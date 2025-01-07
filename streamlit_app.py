@@ -28,7 +28,6 @@ exercise_mapping = {
 }
 
 # Prepare training data for decision tree
-# Create a labeled dataset (this example uses dummy data, replace with real labeled data if available)
 data = {
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
@@ -64,6 +63,16 @@ st.markdown('<h1 style="text-align: center; color: #01579b;">Exercise Recommenda
 
 st.markdown('<h3>Enter your details for personalized exercise recommendations:</h3>', unsafe_allow_html=True)
 
+# Function to handle unseen labels
+def safe_encode(encoder, value, default_value):
+    if value in encoder.classes_:
+        return encoder.transform([value])[0]
+    else:
+        return encoder.transform([default_value])[0]
+
+# Add "Unknown" class to the encoder to handle unseen labels
+encoder.classes_ = np.append(encoder.classes_, ["Unknown"])
+
 # User Inputs
 with st.form("user_details_form"):
     age = st.number_input("Age", min_value=1, max_value=120, value=30)
@@ -76,12 +85,12 @@ with st.form("user_details_form"):
     submit_button = st.form_submit_button("Generate Recommendations")
 
 if submit_button:
-    # Encode user inputs to match the trained model
+    # Encode user inputs
     user_data = pd.DataFrame({
         'Age': [age],
         'Weight': [weight],
-        'Occupation': [encoder.transform([occupation])[0]],
-        'Sleep_Disorder': [encoder.transform([sleep_disorder])[0]],
+        'Occupation': [safe_encode(encoder, occupation, default_value="Sedentary")],
+        'Sleep_Disorder': [safe_encode(encoder, sleep_disorder, default_value="No")],
         'Sleep_Duration': [sleep_duration],
         'Stress_Level': [stress_level],
         'Blood_Pressure': [blood_pressure]
@@ -99,6 +108,17 @@ if submit_button:
             st.markdown(f"{i}. {exercise}")
     else:
         st.warning("No exercises available for the predicted category. Please adjust your inputs.")
+
+# Footer
+st.markdown(
+    """
+    <div style="text-align: center; margin-top: 50px;">
+        <p><strong>Stay healthy, stay active!</strong> Created with <span style="color: red;">♥</span> using Streamlit for your wellness journey.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
 
