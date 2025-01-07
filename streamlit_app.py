@@ -80,11 +80,56 @@ health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
 if not health_data.empty:
     health_data['Date'] = pd.to_datetime(health_data['date'])
 
-# Header
-st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
+# Custom CSS for Modern UI
+st.markdown(
+    """
+    <style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f0f4f8;
+        color: #333;
+    }
+    .header {
+        background-color: #2a9d8f;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        color: white;
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .recommendation {
+        background-color: #e9f5f3;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    .footer span {
+        color: #2a9d8f;
+    }
+    </style>
+    """, 
+    unsafe_allow_html=True
+)
 
-# Health Performance Tracking
-st.markdown("## Your Health Performance Over Time")
+# Header
+st.markdown('<div class="header">Health & Fitness Tracking System</div>', unsafe_allow_html=True)
+
+# Health Performance Tracking Section
+st.markdown("## Health Metrics Over Time")
 if not health_data.empty:
     performance_chart = alt.Chart(health_data).transform_fold(
         ['weight', 'stress_level', 'sleep_duration', 'blood_pressure'],
@@ -97,16 +142,17 @@ if not health_data.empty:
     ).interactive()
     st.altair_chart(performance_chart, use_container_width=True)
 else:
-    st.info("No health data available. Add your first entry below!")
+    st.info("No health data available. Start adding your health metrics below!")
 
 # Update Health Data Form
-st.markdown("## Update Your Health Data")
+st.markdown('<div class="container">', unsafe_allow_html=True)
+st.markdown("### Update Your Health Metrics")
 with st.form("update_health_data"):
     weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
     stress_level = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
     sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
     blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
-    update_button = st.form_submit_button("Update Health Data")
+    update_button = st.form_submit_button("Save Metrics")
 
 if update_button:
     cursor.execute(
@@ -117,12 +163,13 @@ if update_button:
         (datetime.now().strftime("%Y-%m-%d"), weight, stress_level, sleep_duration, blood_pressure)
     )
     conn.commit()
-    st.success("Health data updated successfully!")
+    st.success("Health metrics updated successfully! Refresh the page to view changes.")
+st.markdown('</div>', unsafe_allow_html=True)
 
-# User Input Form for Recommendations
-st.markdown("## Get Personalized Recommendations")
+# Recommendation System
+st.markdown('<div class="container">', unsafe_allow_html=True)
+st.markdown("### Get Personalized Exercise Recommendations")
 with st.form("user_details_form"):
-    st.markdown("### Your Details")
     age = st.number_input("Age", min_value=1, max_value=120, value=30)
     weight_input = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
     occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
@@ -133,7 +180,6 @@ with st.form("user_details_form"):
     submit_button = st.form_submit_button("Generate Recommendations")
 
 if submit_button:
-    # Predict Category
     user_data = scaler.transform([[
         age, weight_input, 
         0 if occupation == "Active" else 1,
@@ -142,13 +188,11 @@ if submit_button:
     ]])
     predicted_category = rf_clf.predict(user_data)[0]
 
-    # Fetch Recommendations
     fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
     gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
     recommendations = random.sample(fitness_exercises, min(2, len(fitness_exercises))) + \
                       random.sample(gym_exercises, min(7, len(gym_exercises)))
 
-    # Display Recommendations
     st.markdown('<div class="recommendation">', unsafe_allow_html=True)
     st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
     if recommendations:
@@ -162,14 +206,14 @@ if submit_button:
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Track your health performance!</strong> Created with <span>♥</span> using Streamlit.</p>
+        <p><strong>Empower your fitness journey!</strong> Designed with <span>♥</span> using Streamlit.</p>
     </div>
     """, 
     unsafe_allow_html=True
 )
 
-# Close the database connection when the app stops
 conn.close()
+
 
 
 
