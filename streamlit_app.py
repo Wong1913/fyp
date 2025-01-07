@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import random
 import altair as alt
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
@@ -45,7 +45,7 @@ exercise_mapping = {
     }
 }
 
-# Train a Decision Tree Classifier (placeholder logic)
+# Train a Random Forest Classifier
 df = pd.DataFrame({
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
@@ -61,9 +61,9 @@ y = df['Category']
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-clf = DecisionTreeClassifier(random_state=42)
-clf.fit(X_train, y_train)
-accuracy = accuracy_score(y_test, clf.predict(X_test))
+rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
+rf_clf.fit(X_train, y_train)
+accuracy = accuracy_score(y_test, rf_clf.predict(X_test))
 
 # Header
 st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
@@ -103,7 +103,7 @@ if submit_button:
         0 if sleep_disorder == "No" else 1,
         sleep_duration, stress_level, blood_pressure
     ]])
-    predicted_category = clf.predict(user_data)[0]
+    predicted_category = rf_clf.predict(user_data)[0]
 
     # Fetch Recommendations
     fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
@@ -130,6 +130,7 @@ st.markdown(
     """, 
     unsafe_allow_html=True
 )
+
 
 
 
