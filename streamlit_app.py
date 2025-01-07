@@ -21,9 +21,18 @@ fitness_data['Intensity'] = pd.cut(
 fitness_mapping = fitness_data.groupby('Intensity')['Activity, Exercise or Sport (1 hour)'].apply(list).to_dict()
 
 exercise_mapping = {
-    "Low": fitness_mapping.get('Low', []) + mega_gym_mapping.get('Beginner', []),
-    "Medium": fitness_mapping.get('Medium', []) + mega_gym_mapping.get('Intermediate', []),
-    "High": fitness_mapping.get('High', []) + mega_gym_mapping.get('Expert', [])
+    "Low": {
+        "fitness": fitness_mapping.get('Low', []),
+        "gym": mega_gym_mapping.get('Beginner', [])
+    },
+    "Medium": {
+        "fitness": fitness_mapping.get('Medium', []),
+        "gym": mega_gym_mapping.get('Intermediate', [])
+    },
+    "High": {
+        "fitness": fitness_mapping.get('High', []),
+        "gym": mega_gym_mapping.get('Expert', [])
+    }
 }
 
 # Prepare training data for decision tree
@@ -94,15 +103,21 @@ if submit_button:
     # Predict exercise category
     predicted_category = clf.predict(user_data)[0]
 
-    # Fetch recommendations
-    recommended_exercises = exercise_mapping.get(predicted_category, [])
+    # Fetch recommendations: 2 from fitness, 7 from gym
+    fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
+    gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
+    
+    # Select random exercises
+    selected_fitness_exercises = random.sample(fitness_exercises, min(2, len(fitness_exercises)))
+    selected_gym_exercises = random.sample(gym_exercises, min(7, len(gym_exercises)))
+
+    # Combine recommendations
+    recommended_exercises = selected_fitness_exercises + selected_gym_exercises
+
     st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
     
     if recommended_exercises:
-        # Limit the number of exercises displayed
-        num_exercises_to_show = min(10, len(recommended_exercises))
-        exercises_to_show = random.sample(recommended_exercises, num_exercises_to_show)
-        for i, exercise in enumerate(exercises_to_show, start=1):
+        for i, exercise in enumerate(recommended_exercises, start=1):
             st.markdown(f"{i}. {exercise}")
     else:
         st.warning("No exercises available for the predicted category. Please adjust your inputs.")
@@ -116,6 +131,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
