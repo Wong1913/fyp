@@ -8,12 +8,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
-# Simulated progress data (to be replaced with a database in a real application)
-progress_data = pd.DataFrame({
+# Simulated health performance data (replace with real user data in production)
+health_data = pd.DataFrame({
     'Date': pd.date_range(start="2025-01-01", periods=10, freq='D'),
-    'Intensity': np.random.choice(['Low', 'Medium', 'High'], size=10),
-    'Calories Burned': np.random.randint(100, 500, size=10),
-    'Duration (mins)': np.random.randint(30, 120, size=10)
+    'Weight (kg)': np.random.randint(60, 90, size=10),
+    'Stress Level': np.random.randint(2, 10, size=10),
+    'Sleep Duration (hrs)': np.random.uniform(5, 9, size=10).round(1),
+    'Blood Pressure (mmHg)': np.random.randint(110, 150, size=10)
 })
 
 # Load datasets
@@ -64,45 +65,21 @@ clf = DecisionTreeClassifier(random_state=42)
 clf.fit(X_train, y_train)
 accuracy = accuracy_score(y_test, clf.predict(X_test))
 
-# UI with Light/Dark Mode
-theme = st.sidebar.radio("Select Theme", ['Light', 'Dark'])
-if theme == 'Dark':
-    st.markdown(
-        """
-        <style>
-        body { background-color: #121212; color: white; }
-        .container { background-color: #1e1e1e; color: white; }
-        .recommendation { background-color: #242424; }
-        .footer { color: white; }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-else:
-    st.markdown(
-        """
-        <style>
-        body { background-color: #e3f2fd; color: black; }
-        .container { background-color: white; color: black; }
-        .recommendation { background-color: #e3f2fd; }
-        .footer { color: black; }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
 # Header
 st.markdown('<div class="header">Exercise Recommendation System</div>', unsafe_allow_html=True)
 
 # Progress Tracking Section
-st.markdown("## Your Progress Over Time")
-chart = alt.Chart(progress_data).mark_line(point=True).encode(
+st.markdown("## Your Health Performance Over Time")
+performance_chart = alt.Chart(health_data).transform_fold(
+    ['Weight (kg)', 'Stress Level', 'Sleep Duration (hrs)', 'Blood Pressure (mmHg)'],
+    as_=['Metric', 'Value']
+).mark_line(point=True).encode(
     x='Date:T',
-    y='Calories Burned:Q',
-    color='Intensity:N',
-    tooltip=['Date:T', 'Calories Burned:Q', 'Duration (mins):Q', 'Intensity:N']
+    y='Value:Q',
+    color='Metric:N',
+    tooltip=['Date:T', 'Metric:N', 'Value:Q']
 ).interactive()
-st.altair_chart(chart, use_container_width=True)
+st.altair_chart(performance_chart, use_container_width=True)
 
 # User Input Form
 st.markdown('<div class="container">', unsafe_allow_html=True)
@@ -148,11 +125,12 @@ if submit_button:
 st.markdown(
     """
     <div class="footer">
-        <p><strong>Track your fitness journey!</strong> Created with <span>♥</span> using Streamlit.</p>
+        <p><strong>Track your health performance!</strong> Created with <span>♥</span> using Streamlit.</p>
     </div>
     """, 
     unsafe_allow_html=True
 )
+
 
 
 
