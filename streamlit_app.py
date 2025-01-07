@@ -5,8 +5,10 @@ import random
 from datetime import datetime
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score
 
-# Load necessary datasets
+# Load datasets
 sleep_health_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/Sleep_health_and_lifestyle_dataset.csv')
 mega_gym_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/megaGymDataset.csv')
 fitness_data = pd.read_csv('https://raw.githubusercontent.com/Wong1913/fyp/refs/heads/master/fitness_dataset.csv')
@@ -35,7 +37,7 @@ exercise_mapping = {
     }
 }
 
-# Prepare training data for decision tree
+# Prepare training data
 data = {
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
@@ -49,16 +51,20 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Manually map categorical variables
+# Map categorical variables
 occupation_mapping = {'Active': 0, 'Sedentary': 1}
 sleep_disorder_mapping = {'No': 0, 'Yes': 1}
 
 df['Occupation'] = df['Occupation'].map(occupation_mapping)
 df['Sleep_Disorder'] = df['Sleep_Disorder'].map(sleep_disorder_mapping)
 
-# Split data into features and labels
+# Split data
 X = df[['Age', 'Weight', 'Occupation', 'Sleep_Disorder', 'Sleep_Duration', 'Stress_Level', 'Blood_Pressure']]
 y = df['Category']
+
+# Normalize features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -67,70 +73,61 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 clf = DecisionTreeClassifier(random_state=42)
 clf.fit(X_train, y_train)
 
-# Streamlit App
-st.set_page_config(page_title="Exercise Recommendation System", page_icon="🏋️", layout="wide")
-st.markdown('<h1 style="text-align: center; color: #01579b;">Exercise Recommendation System</h1>', unsafe_allow_html=True)
+# Calculate model accuracy
+y_pred = clf.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
 
-st.markdown('<h3>Enter your details for personalized exercise recommendations:</h3>', unsafe_allow_html=True)
+# Streamlit App
+st.set_page_config(page_title="Advanced Exercise Recommendation", page_icon="🏋️", layout="wide")
+
+st.markdown('<h1 style="text-align: center; color: #01579b;">Advanced Exercise Recommendation System</h1>', unsafe_allow_html=True)
+st.markdown('<h3>Enter your details for personalized recommendations:</h3>', unsafe_allow_html=True)
 
 # User Inputs
 with st.form("user_details_form"):
-    age = st.number_input("Age", min_value=1, max_value=120, value=30)
-    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0)
-    occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
-    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
-    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
-    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5)
-    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
+    age = st.number_input("Age", min_value=1, max_value=120, value=30, help="Enter your age.")
+    weight = st.number_input("Weight (kg)", min_value=1.0, max_value=200.0, value=70.0, help="Enter your weight.")
+    occupation = st.selectbox("Occupation", ["Active", "Sedentary"], help="Select your daily activity level.")
+    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"], help="Diagnosed sleep issues?")
+    sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0, help="Average hours of sleep per day.")
+    stress_level = st.slider("Stress Level (2-10)", min_value=2, max_value=10, value=5, help="Rate your current stress level.")
+    blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120, help="Enter your systolic blood pressure.")
     submit_button = st.form_submit_button("Generate Recommendations")
 
 if submit_button:
-    # Map user inputs using the same mappings
-    user_occupation = occupation_mapping.get(occupation, 1)  # Default to 'Sedentary' if unknown
-    user_sleep_disorder = sleep_disorder_mapping.get(sleep_disorder, 0)  # Default to 'No' if unknown
-
-    # Create user input DataFrame
-    user_data = pd.DataFrame({
-        'Age': [age],
-        'Weight': [weight],
-        'Occupation': [user_occupation],
-        'Sleep_Disorder': [user_sleep_disorder],
-        'Sleep_Duration': [sleep_duration],
-        'Stress_Level': [stress_level],
-        'Blood_Pressure': [blood_pressure]
-    })
-
-    # Predict exercise category
-    predicted_category = clf.predict(user_data)[0]
-
-    # Fetch recommendations: 2 from fitness, 7 from gym
-    fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
-    gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
-    
-    # Select random exercises
-    selected_fitness_exercises = random.sample(fitness_exercises, min(2, len(fitness_exercises)))
-    selected_gym_exercises = random.sample(gym_exercises, min(7, len(gym_exercises)))
-
-    # Combine recommendations
-    recommended_exercises = selected_fitness_exercises + selected_gym_exercises
-
-    st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
-    
-    if recommended_exercises:
-        for i, exercise in enumerate(recommended_exercises, start=1):
-            st.markdown(f"{i}. {exercise}")
+    # Validate inputs
+    if age <= 0 or weight <= 0 or blood_pressure <= 0:
+        st.error("Please provide valid inputs.")
     else:
-        st.warning("No exercises available for the predicted category. Please adjust your inputs.")
+        # Map inputs and scale
+        user_data = scaler.transform([[
+            age, weight, 
+            occupation_mapping.get(occupation, 1),  # Default to 'Sedentary'
+            sleep_disorder_mapping.get(sleep_disorder, 0),  # Default to 'No'
+            sleep_duration, stress_level, blood_pressure
+        ]])
 
-# Footer
-st.markdown(
-    """
-    <div style="text-align: center; margin-top: 50px;">
-        <p><strong>Stay healthy, stay active!</strong> Created with <span style="color: red;">♥</span> using Streamlit for your wellness journey.</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        # Predict category
+        predicted_category = clf.predict(user_data)[0]
+
+        # Fetch recommendations: 2 fitness + 7 gym
+        fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
+        gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
+        selected_fitness_exercises = random.sample(fitness_exercises, min(2, len(fitness_exercises)))
+        selected_gym_exercises = random.sample(gym_exercises, min(7, len(gym_exercises)))
+        recommendations = selected_fitness_exercises + selected_gym_exercises
+
+        # Display recommendations
+        st.markdown(f"<h3>Recommended Exercises ({predicted_category} Intensity):</h3>", unsafe_allow_html=True)
+        if recommendations:
+            for i, exercise in enumerate(recommendations, start=1):
+                st.markdown(f"{i}. {exercise}")
+        else:
+            st.warning("No exercises available for the predicted category.")
+
+        # Display model metrics
+        st.markdown(f"<h4>Model Accuracy: {accuracy * 100:.2f}%</h4>", unsafe_allow_html=True)
+
 
 
 
