@@ -87,11 +87,11 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
     body {
         font-family: 'Arial', sans-serif;
-        background-color: #e1f5fe; /* Baby Blue Background */
+        background-color: #e1f5fe;
         color: #333;
     }
     .header {
-        background-color: #039be5; /* Blue Header */
+        background-color: #039be5;
         padding: 20px;
         border-radius: 8px;
         text-align: center;
@@ -131,48 +131,24 @@ st.markdown(
 st.markdown('<div class="header">Personalized Fitness Plan</div>', unsafe_allow_html=True)
 
 # Health Performance Tracking Section
-st.markdown("## Manage Your Health Metrics")
+st.markdown("## Health Metrics Over Time")
 if not health_data.empty:
-    st.dataframe(health_data)
-
-    # Edit health data
-    st.markdown("### Edit a Record")
-    record_id = st.selectbox("Select a record to edit:", health_data["id"])
-    if record_id:
-        selected_record = health_data[health_data["id"] == record_id].iloc[0]
-        new_weight = st.number_input("Edit Weight (kg)", value=selected_record["weight"])
-        new_stress_level = st.slider("Edit Stress Level (1-10)", value=selected_record["stress_level"], min_value=1, max_value=10)
-        new_sleep_duration = st.number_input("Edit Sleep Duration (hours)", value=selected_record["sleep_duration"])
-        new_blood_pressure = st.number_input("Edit Blood Pressure (mmHg)", value=selected_record["blood_pressure"])
-        update_button = st.button("Update Record")
-
-        if update_button:
-            cursor.execute(
-                '''
-                UPDATE health_performance
-                SET weight = ?, stress_level = ?, sleep_duration = ?, blood_pressure = ?
-                WHERE id = ?
-                ''',
-                (new_weight, new_stress_level, new_sleep_duration, new_blood_pressure, record_id)
-            )
-            conn.commit()
-            st.success("Record updated successfully! Refresh the page to see changes.")
-
-    # Delete health data
-    st.markdown("### Delete a Record")
-    delete_record_id = st.selectbox("Select a record to delete:", health_data["id"], key="delete")
-    if delete_record_id:
-        delete_button = st.button("Delete Record", key="delete_button")
-        if delete_button:
-            cursor.execute("DELETE FROM health_performance WHERE id = ?", (delete_record_id,))
-            conn.commit()
-            st.success("Record deleted successfully! Refresh the page to see changes.")
+    performance_chart = alt.Chart(health_data).transform_fold(
+        ['weight', 'stress_level', 'sleep_duration', 'blood_pressure'],
+        as_=['Metric', 'Value']
+    ).mark_line(point=True).encode(
+        x='Date:T',
+        y='Value:Q',
+        color='Metric:N',
+        tooltip=['Date:T', 'Metric:N', 'Value:Q']
+    ).interactive()
+    st.altair_chart(performance_chart, use_container_width=True)
 else:
     st.info("No health data available. Start adding your health metrics below!")
 
 # Update Health Data Form
 st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("### Add New Health Metrics")
+st.markdown("### Update Your Health Metrics")
 with st.form("update_health_data"):
     weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
     stress_level = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
@@ -189,7 +165,67 @@ if update_button:
         (datetime.now().strftime("%Y-%m-%d"), weight, stress_level, sleep_duration, blood_pressure)
     )
     conn.commit()
-    st.success("Health metrics updated successfully! Refresh the page to see changes.")
+    st.success("Health metrics updated successfully! Refresh the page to view changes.")
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Edit or Delete Health Metrics
+st.markdown('<div class="container">', unsafe_allow_html=True)
+st.markdown("### Manage Your Health Metrics")
+
+# Fetch data to display for editing/deleting
+health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
+if not health_data.empty:
+    health_data['Date'] = pd.to_datetime(health_data['date'])
+
+    # Display health data in a table
+    st.dataframe(health_data)
+
+    # Select a row to edit or delete
+    selected_row = st.selectbox("Select a record to manage:", health_data['id'])
+
+    # Fetch selected row details
+    if selected_row:
+        row_data = health_data[health_data['id'] == selected_row].iloc[0]
+        st.markdown("#### Edit the Selected Record")
+        with st.form(f"edit_form_{selected_row}"):
+            weight_edit = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=row_data['weight'])
+            stress_level_edit = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=row_data['stress_level'])
+            sleep_duration_edit = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=row_data['sleep_duration'])
+            blood_pressure_edit = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=row_data['blood_pressure'])
+            update_button = st.form_submit_button("Update Record")
+
+        if update_button:
+            cursor.execute(
+                '''
+                UPDATE health_performance
+                SET weight = ?, stress_level = ?, sleep_duration = ?, blood_pressure = ?
+                WHERE id = ?
+                ''',
+                (weight_edit, stress_level_edit, sleep_duration_edit, blood_pressure_edit, selected_row)
+            )
+            conn.commit()
+            st.success("Record updated successfully! Refresh the page to see changes.")
+
+        # Delete functionality
+        st.markdown("#### Delete the Selected Record")
+        if st.button(f"Delete Record {selected_row}"):
+            cursor.execute("DELETE FROM health_performance WHERE id = ?", (selected_row,))
+            conn.commit()
+            st.success(f"Record {selected_row} deleted successfully! Refresh the page to see changes.")
+else:
+    st.info("No health data available to manage.")
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Footer
+st.markdown(
+    """
+    <div class="footer">
+        <p><strong>Empower your fitness journey!</strong> Designed with <span>♥</span> using Streamlit.</p>
+    </div>
+    """, 
+    unsafe_allow_html=True
+)
 
 conn.close()
 
