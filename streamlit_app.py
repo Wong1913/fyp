@@ -107,12 +107,6 @@ st.markdown(
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    .recommendation {
-        background-color: #b3e5fc;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
     .footer {
         text-align: center;
         margin-top: 30px;
@@ -130,33 +124,60 @@ st.markdown(
 # Header
 st.markdown('<div class="header">Personalized Fitness Plan</div>', unsafe_allow_html=True)
 
-# Health Performance Tracking Section
-st.markdown("## Health Metrics Over Time")
+# Manage Health Data Section
+st.markdown("## Manage Your Health Metrics")
 if not health_data.empty:
-    performance_chart = alt.Chart(health_data).transform_fold(
-        ['weight', 'stress_level', 'sleep_duration', 'blood_pressure'],
-        as_=['Metric', 'Value']
-    ).mark_line(point=True).encode(
-        x='Date:T',
-        y='Value:Q',
-        color='Metric:N',
-        tooltip=['Date:T', 'Metric:N', 'Value:Q']
-    ).interactive()
-    st.altair_chart(performance_chart, use_container_width=True)
+    st.dataframe(health_data)
+
+    # Select a record to edit or delete
+    selected_id = st.selectbox("Select a record to edit or delete", health_data["id"])
+
+    # Load the selected record
+    selected_record = health_data[health_data["id"] == selected_id]
+    if not selected_record.empty:
+        selected_date = selected_record.iloc[0]["date"]
+        selected_weight = selected_record.iloc[0]["weight"]
+        selected_stress_level = selected_record.iloc[0]["stress_level"]
+        selected_sleep_duration = selected_record.iloc[0]["sleep_duration"]
+        selected_blood_pressure = selected_record.iloc[0]["blood_pressure"]
+
+        # Edit or Delete Form
+        st.markdown("### Edit Selected Record")
+        with st.form("edit_health_data"):
+            weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=selected_weight)
+            stress_level = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=selected_stress_level)
+            sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=selected_sleep_duration)
+            blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=selected_blood_pressure)
+            save_changes = st.form_submit_button("Save Changes")
+            delete_record = st.form_submit_button("Delete Record")
+
+        if save_changes:
+            cursor.execute('''
+                UPDATE health_performance
+                SET weight = ?, stress_level = ?, sleep_duration = ?, blood_pressure = ?
+                WHERE id = ?
+            ''', (weight, stress_level, sleep_duration, blood_pressure, selected_id))
+            conn.commit()
+            st.success("Record updated successfully! Refresh the page to see changes.")
+        
+        if delete_record:
+            cursor.execute('DELETE FROM health_performance WHERE id = ?', (selected_id,))
+            conn.commit()
+            st.success("Record deleted successfully! Refresh the page to see changes.")
 else:
-    st.info("No health data available. Start adding your health metrics below!")
+    st.info("No health data available. Add new metrics below.")
 
 # Update Health Data Form
 st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("### Update Your Health Metrics")
-with st.form("update_health_data"):
+st.markdown("### Add New Health Metrics")
+with st.form("add_health_data"):
     weight = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
     stress_level = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
     sleep_duration = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
     blood_pressure = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
-    update_button = st.form_submit_button("Save Metrics")
+    add_record = st.form_submit_button("Add Metrics")
 
-if update_button:
+if add_record:
     cursor.execute(
         '''
         INSERT INTO health_performance (date, weight, stress_level, sleep_duration, blood_pressure)
@@ -165,44 +186,8 @@ if update_button:
         (datetime.now().strftime("%Y-%m-%d"), weight, stress_level, sleep_duration, blood_pressure)
     )
     conn.commit()
-    st.success("Health metrics updated successfully! Refresh the page to view changes.")
+    st.success("New metrics added successfully! Refresh the page to see changes.")
 st.markdown('</div>', unsafe_allow_html=True)
-
-# Recommendation System
-st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("### Get Personalized Exercise Recommendations")
-with st.form("user_details_form"):
-    age = st.number_input("Age", min_value=1, max_value=120, value=30)
-    weight_input = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
-    occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
-    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
-    sleep_duration_input = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
-    stress_level_input = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
-    blood_pressure_input = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
-    submit_button = st.form_submit_button("Generate Recommendations")
-
-if submit_button:
-    user_data = scaler.transform([[
-        age, weight_input, 
-        0 if occupation == "Active" else 1,
-        0 if sleep_disorder == "No" else 1,
-        sleep_duration_input, stress_level_input, blood_pressure_input
-    ]])
-    predicted_category = rf_clf.predict(user_data)[0]
-
-    fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
-    gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
-    recommendations = random.sample(fitness_exercises, min(2, len(fitness_exercises))) + \
-                      random.sample(gym_exercises, min(7, len(gym_exercises)))
-
-    st.markdown('<div class="recommendation">', unsafe_allow_html=True)
-    st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
-    if recommendations:
-        for i, exercise in enumerate(recommendations, start=1):
-            st.markdown(f"{i}. {exercise}")
-    else:
-        st.warning("No exercises available for the predicted category.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown(
@@ -215,6 +200,7 @@ st.markdown(
 )
 
 conn.close()
+
 
 
 
