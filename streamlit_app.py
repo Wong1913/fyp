@@ -87,11 +87,11 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
     body {
         font-family: 'Arial', sans-serif;
-        background-color: #e1f5fe;
+        background-color: #e1f5fe; /* Baby Blue Background */
         color: #333;
     }
     .header {
-        background-color: #039be5;
+        background-color: #039be5; /* Blue Header */
         padding: 20px;
         border-radius: 8px;
         text-align: center;
@@ -168,54 +168,41 @@ if update_button:
     st.success("Health metrics updated successfully! Refresh the page to view changes.")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Edit or Delete Health Metrics
+# Recommendation System
 st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("### Manage Your Health Metrics")
+st.markdown("### Get Personalized Exercise Recommendations")
+with st.form("user_details_form"):
+    age = st.number_input("Age", min_value=1, max_value=120, value=30)
+    weight_input = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
+    occupation = st.selectbox("Occupation", ["Active", "Sedentary"])
+    sleep_disorder = st.selectbox("Do you have a sleep disorder?", ["Yes", "No"])
+    sleep_duration_input = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=7.0)
+    stress_level_input = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=5)
+    blood_pressure_input = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=120)
+    submit_button = st.form_submit_button("Generate Recommendations")
 
-# Fetch data to display for editing/deleting
-health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
-if not health_data.empty:
-    health_data['Date'] = pd.to_datetime(health_data['date'])
+if submit_button:
+    user_data = scaler.transform([[
+        age, weight_input, 
+        0 if occupation == "Active" else 1,
+        0 if sleep_disorder == "No" else 1,
+        sleep_duration_input, stress_level_input, blood_pressure_input
+    ]])
+    predicted_category = rf_clf.predict(user_data)[0]
 
-    # Display health data in a table
-    st.dataframe(health_data)
+    fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
+    gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
+    recommendations = random.sample(fitness_exercises, min(2, len(fitness_exercises))) + \
+                      random.sample(gym_exercises, min(7, len(gym_exercises)))
 
-    # Select a row to edit or delete
-    selected_row = st.selectbox("Select a record to manage:", health_data['id'])
-
-    # Fetch selected row details
-    if selected_row:
-        row_data = health_data[health_data['id'] == selected_row].iloc[0]
-        st.markdown("#### Edit the Selected Record")
-        with st.form(f"edit_form_{selected_row}"):
-            weight_edit = st.number_input("Weight (kg)", min_value=30.0, max_value=200.0, value=row_data['weight'])
-            stress_level_edit = st.slider("Stress Level (1-10)", min_value=1, max_value=10, value=row_data['stress_level'])
-            sleep_duration_edit = st.number_input("Sleep Duration (hours)", min_value=1.0, max_value=12.0, value=row_data['sleep_duration'])
-            blood_pressure_edit = st.number_input("Blood Pressure (mmHg)", min_value=80, max_value=200, value=row_data['blood_pressure'])
-            update_button = st.form_submit_button("Update Record")
-
-        if update_button:
-            cursor.execute(
-                '''
-                UPDATE health_performance
-                SET weight = ?, stress_level = ?, sleep_duration = ?, blood_pressure = ?
-                WHERE id = ?
-                ''',
-                (weight_edit, stress_level_edit, sleep_duration_edit, blood_pressure_edit, selected_row)
-            )
-            conn.commit()
-            st.success("Record updated successfully! Refresh the page to see changes.")
-
-        # Delete functionality
-        st.markdown("#### Delete the Selected Record")
-        if st.button(f"Delete Record {selected_row}"):
-            cursor.execute("DELETE FROM health_performance WHERE id = ?", (selected_row,))
-            conn.commit()
-            st.success(f"Record {selected_row} deleted successfully! Refresh the page to see changes.")
-else:
-    st.info("No health data available to manage.")
-
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="recommendation">', unsafe_allow_html=True)
+    st.markdown(f"### Recommended Exercises ({predicted_category} Intensity)")
+    if recommendations:
+        for i, exercise in enumerate(recommendations, start=1):
+            st.markdown(f"{i}. {exercise}")
+    else:
+        st.warning("No exercises available for the predicted category.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.markdown(
@@ -226,8 +213,6 @@ st.markdown(
     """, 
     unsafe_allow_html=True
 )
-
-conn.close()
 
 
 
