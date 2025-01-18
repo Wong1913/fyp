@@ -6,7 +6,7 @@ import altair as alt
 import sqlite3
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
@@ -55,7 +55,7 @@ exercise_mapping = {
     }
 }
 
-# Train a Random Forest Classifier with Hyperparameter Tuning
+# Train a Random Forest Classifier
 df = pd.DataFrame({
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
@@ -71,16 +71,8 @@ y = df['Category']
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Hyperparameter Tuning
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10]
-}
-grid_search = GridSearchCV(RandomForestClassifier(random_state=42), param_grid, cv=3, scoring='accuracy')
-grid_search.fit(X_train, y_train)
-rf_clf = grid_search.best_estimator_
+rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
+rf_clf.fit(X_train, y_train)
 accuracy = accuracy_score(y_test, rf_clf.predict(X_test))
 
 # Fetch data from database
