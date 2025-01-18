@@ -74,10 +74,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
 rf_clf.fit(X_train, y_train)
 accuracy = accuracy_score(y_test, rf_clf.predict(X_test))
-feature_importance = pd.DataFrame(
-    {"Feature": ['Age', 'Weight', 'Occupation', 'Sleep_Disorder', 'Sleep_Duration', 'Stress_Level', 'Blood_Pressure'],
-     "Importance": rf_clf.feature_importances_}
-).sort_values(by="Importance", ascending=False)
 
 # Fetch data from database
 health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
@@ -217,10 +213,6 @@ if submit_button:
         st.warning("No exercises available for the predicted category.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("### Feature Importance in Predictions")
-    st.dataframe(feature_importance)
-    st.bar_chart(feature_importance.set_index("Feature"))
-
 # Footer
 st.markdown(
     """
@@ -232,6 +224,7 @@ st.markdown(
 )
 
 conn.close()
+
 
 
 
