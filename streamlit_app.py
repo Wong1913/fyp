@@ -6,7 +6,7 @@ import altair as alt
 import sqlite3
 from datetime import datetime
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 
@@ -55,7 +55,7 @@ exercise_mapping = {
     }
 }
 
-# Train a Random Forest Classifier with cross-validation and hyperparameter tuning
+# Train a Random Forest Classifier
 df = pd.DataFrame({
     'Age': [25, 55, 35, 60, 20],
     'Weight': [70, 90, 80, 85, 60],
@@ -71,22 +71,9 @@ y = df['Category']
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Hyperparameter tuning
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4]
-}
-rf_clf = RandomForestClassifier(random_state=42)
-grid_search = GridSearchCV(estimator=rf_clf, param_grid=param_grid, cv=5, n_jobs=-1, scoring='accuracy')
-grid_search.fit(X_train, y_train)
-rf_clf_best = grid_search.best_estimator_
-
-# Evaluate the best model
-cv_scores = cross_val_score(rf_clf_best, X_train, y_train, cv=5)
-accuracy = accuracy_score(y_test, rf_clf_best.predict(X_test))
+rf_clf = RandomForestClassifier(random_state=42, n_estimators=100)
+rf_clf.fit(X_train, y_train)
+accuracy = accuracy_score(y_test, rf_clf.predict(X_test))
 
 # Fetch data from database
 health_data = pd.read_sql_query("SELECT * FROM health_performance", conn)
@@ -210,7 +197,7 @@ if submit_button:
         0 if sleep_disorder == "No" else 1,
         sleep_duration_input, stress_level_input, blood_pressure_input
     ]])
-    predicted_category = rf_clf_best.predict(user_data)[0]
+    predicted_category = rf_clf.predict(user_data)[0]
 
     fitness_exercises = exercise_mapping.get(predicted_category, {}).get("fitness", [])
     gym_exercises = exercise_mapping.get(predicted_category, {}).get("gym", [])
@@ -237,6 +224,7 @@ st.markdown(
 )
 
 conn.close()
+
 
 
 
